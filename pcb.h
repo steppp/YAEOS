@@ -9,4 +9,4 @@ typedef struct pcb_t {
 	state_t p_s;
 	int priority;
 	int *p_semKey;
-} pcb_t
+} pcb_t;
