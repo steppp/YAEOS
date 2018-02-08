@@ -1,5 +1,8 @@
 #define MAXPROC 10
 
+//defining status of a pcb_t state_t 
+typedef int state_t;
+
 //pcb_t struct as defined in specifications
 typedef struct pcb_t {
 	struct pcb_t *p_next;
@@ -9,4 +12,4 @@ typedef struct pcb_t {
 	state_t p_s;
 	int priority;
 	int *p_semKey;
-} pcb_t
+} pcb_t;
