@@ -4,9 +4,6 @@
 #include <state.h>
 #endif //PCB_H
 
-//defining status of a pcb_t state_t 
-typedef int state_t;
-
 //pcb_t struct as defined in specifications
 typedef struct pcb_t {
 	struct pcb_t *p_next;
