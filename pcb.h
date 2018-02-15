@@ -1,4 +1,8 @@
-#define MAXPROC 10
+//#define MAXPROC 10
+#ifndef PCB_H
+#define PCB_H
+#include <state.h>
+#endif //PCB_H
 
 //defining status of a pcb_t state_t 
 typedef int state_t;

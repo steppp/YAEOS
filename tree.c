@@ -3,9 +3,6 @@
 #include "tree.h"
 #endif
 
-/**
-* Adds p as a child of parent
-*/
 void insertChild(pcb_t *parent, pcb_t *p) {
 	//if it has no child 
 	if (parent->p_first_child == NULL) {
@@ -28,10 +25,6 @@ void _addAsLastSibl(pcb_t *node, pcb_t *p) {
 	else _addAsLastSibl(node->p_sib, p);
 }
 
-/**
-* Removes the first child of p. 
-* If p has no childs, this function returns NULL, else returns the removed child.
-*/
 pcb_t *removeChild(pcb_t *p) {
 	pcb_t *child = p->p_first_child;
 	//if p has no child return null
@@ -47,13 +40,18 @@ pcb_t *outChild(pcb_t *p) {
 	//If p has no parent return null
 	if (p->p_parent == NULL) 
 		return NULL;
-
-	if (p->p_parent->p_first_child = p)
+	//If p is the first child of his parent
+	if (p->p_parent->p_first_child = p) {
 		p->p_parent->p_first_child = p->p_sib;
+	}
+	//Else if is not the first child of his parent...
 	else {
-		prev_p = _fetchPreviousSibling(p, p->p_parent->p_first_child);
+		//Search for his previous silbling 
+		prev_p = _fetchPreviousSibling(p, p->p_parent->p_first_child); 
+		//Previous sibling's sibling is the sibling of p (i am excluding p from the list)
 		prev_p->p_sib = p->p_sib;
 	}
+	//p has no parent anymore
 	p->p_parent = NULL;
 	return p;
 }
