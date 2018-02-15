@@ -25,6 +25,10 @@ void printTree(pcb_t *node, int level) {
 		tprint("\t\0");
 	c = c + node->priority;
 	tprint(&c);
+	tprint(" prnt=\0");
+	c = '0';
+	c = c + node->p_parent->priority;
+	tprint(&c);
 	tprint("\n\0");
 	if (node->p_first_child != NULL)
 		printTree(node->p_first_child, level +1);
