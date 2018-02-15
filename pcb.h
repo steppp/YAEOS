@@ -1,4 +1,8 @@
 //#define MAXPROC 10
+#ifndef PCB_H
+#define PCB_H
+#include <state.h>
+
 
 //pcb_t struct as defined in specifications
 typedef struct pcb_t {
@@ -10,3 +14,5 @@ typedef struct pcb_t {
 	int priority;
 	int *p_semKey;
 } pcb_t;
+
+#endif //PCB_H
