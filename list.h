@@ -1,8 +1,17 @@
-//for lists
+#ifndef LIST_H
+#define LIST_H
 #include "pcb.h"
 
+#define NULL (void*) 0
+
+/*
+Inserts a new pcb into the queue, the position varies depending on the "priority" field of the pcb (Descending order)
+*/
 void 	insertProcQ(pcb_t **head, pcb_t *p);
 
+/*
+Returns the first element of the queue without removing it , returns NULL if the queue is empty
+*/
 pcb_t 	*headProcQ(pcb_t *head);
 
 /*
@@ -22,4 +31,5 @@ void 	forallProcQ(pcb_t *head,
 			void fun(pcb_t *pcb, void *),
 			void *arg);
 
+#endif //LIST_H
 
