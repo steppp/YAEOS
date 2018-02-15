@@ -30,7 +30,7 @@ int insertBlocked(int *key,pcb_t *p)
             return -1;
     }
     else
-        enqueue(&entry->s_procQ,p);
+        enqueue(&entry->s_procQ,p); // Need to make sure that p->p_next == NULL
     return 0;
 }
 
