@@ -1,19 +1,8 @@
 //for lists
 #include "pcb.h"
 
-
-#include <stdio.h>
-#include <stdlib.h>
-
-
-/*
-Inserts a new pcb into the queue, the position varies depending on the "priority" field of the pcb (Descending order)
-*/
 void 	insertProcQ(pcb_t **head, pcb_t *p);
 
-/*
-Returns the first element of the queue without removing it , returns NULL if the queue is empty
-*/
 pcb_t 	*headProcQ(pcb_t *head);
 
 /*
