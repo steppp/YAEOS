@@ -1,5 +1,5 @@
-#include <semaphore.h>
-#include <list.h>
+#include "semaphore.h"
+#include "list.h"
 
 int insertBlocked(int *key,pcb_t *p)
 {

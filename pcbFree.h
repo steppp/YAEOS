@@ -8,6 +8,9 @@
 #ifndef PCBFREE_H
 #define PCBFREE_H
 
+#include <uARMconst.h>
+#include <uARMtypes.h>
+
 #include "pcb.h"
 #include "state.h"
 

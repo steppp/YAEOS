@@ -1,7 +1,5 @@
-#ifndef TREE_H
-#define TREE_H
 #include "tree.h"
-#endif
+
 
 void insertChild(pcb_t *parent, pcb_t *p) {
 	//if it has no child 

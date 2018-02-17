@@ -1,10 +1,12 @@
 //for semaphores
 #ifndef SEMAPHORE_H
 #define SEMAPHORE_H
-#include <const.h>
-#include <pcb.h>
 
-#define NULL (void*) 0
+#include <uARMconst.h>
+#include <uARMtypes.h>
+
+#include "const.h"
+#include "pcb.h"
 
 #define HASH_MULT_CONST 0.61803398875
 /*

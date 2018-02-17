@@ -1,13 +1,11 @@
 //for trees
-#ifndef PCB_H
-#define PCB_H
-#include "pcb.h"
-#endif
+#ifndef TREE_H
+#define TREE_H
 
-//defining null const
-#ifndef NULL
-#define NULL 0
-#endif
+#include <uARMconst.h>
+#include <uARMtypes.h>
+
+#include "pcb.h"
 
 /**
 * Adds p as a child of parent
@@ -27,7 +25,7 @@ pcb_t 	*removeChild(pcb_t *p);
 */
 pcb_t 	*outChild(pcb_t *p);
 
-//adds the new child p as last sibling in node
+//adds the new child p as last sibling innode
 void 	_addAsLastSibl(pcb_t *node, pcb_t *p);
 
 /**
@@ -37,5 +35,4 @@ void 	_addAsLastSibl(pcb_t *node, pcb_t *p);
 */
 pcb_t 	*_fetchPreviousSibling(pcb_t *p, pcb_t *next);
 
-
-
+#endif//TREE_H
