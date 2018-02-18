@@ -13,7 +13,11 @@
 
 #include "pcb.h"
 #include "state.h"
+#include "const.h"
 
+
+pcb_t *pcbFree_h;
+pcb_t pcbFree_table[MAXPROC];
 /*
  * Inizializza la lista in modo da contenere tutti gli elementi
  * della pcbFree_table. Deve essere chiamato una sola volta in
@@ -26,5 +30,10 @@ void initPcbs();
  * (pcbFree)
  */
 void freePcb(pcb_t *p);
+
+/*
+ *
+ */
+pcb_t *allocPcb();
 
 #endif //PCBFREE_H

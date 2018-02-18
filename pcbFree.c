@@ -1,14 +1,5 @@
 #include "pcbFree.h"
 
-#include "pcb.h"
-
-#include "state.h"
-
-#include "const.h"
-
-pcb_t *pcbFree_h;
-pcb_t pcbFree_table[MAXPROC];
-
 pcb_t *insertLastElements(int currentIndex) {
     if (currentIndex < MAXPROC) {   // non ho ancora superato la capacità
         /* estraggo l'elemento corrente dalla lista e gli assegno come
@@ -75,4 +66,21 @@ void freePcb(pcb_t *p) {
     }
 
     append(p, pcbFree_h, 1);
+}
+
+pcb_t *allocPcb() {
+    pcb_t *p = pcbFree_h;
+    if (p == NULL)
+        return NULL;
+    pcbFree_h = pcbFree_h->p_next;
+
+    p->p_next = NULL;
+    p->p_parent = NULL;
+    p->p_first_child = NULL;
+    p->p_sib = NULL;
+    p->p_s = (state_t) {0};
+    p->p_priority = 0;
+    p->p_semKey = NULL;
+
+    return p;
 }
