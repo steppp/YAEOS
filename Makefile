@@ -25,4 +25,4 @@ pcbFree.o:
 	arm-none-eabi-gcc -c -mcpu=arm7tdmi -I /usr/include/uarm/ pcbFree.c	
 
 clean:
-	rm *.o p1test mymain
+	rm *.o p1test
