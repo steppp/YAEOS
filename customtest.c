@@ -31,7 +31,7 @@ void TestInsertProcQ(){
     pcb_t * elem2=malloc(sizeof(pcb_t));
     pcb_t * elem3=malloc(sizeof(pcb_t));
 
-    elem->priority=10;
+    elem->p_priority=10;
     printf("Indirizzo elem priorità media\n");
     printf("%p\n",elem);
 
@@ -44,11 +44,11 @@ void TestInsertProcQ(){
     
 
     printf("Test inserimento priorità alta e poi bassa\n");
-    elem2->priority=5;
+    elem2->p_priority=5;
     printf("Indirizzo elem2 priorità alta\n");
     printf("%p\n",elem2);
 
-    elem3->priority=1;
+    elem3->p_priority=1;
     
     printf("Indirizzo elem3 priorità bassa\n");
     printf("%p\n",elem3);
@@ -60,12 +60,12 @@ void TestInsertProcQ(){
 
     printf("Dopo inserimento(Dovrebbe essere = elem2)\n");
     printf("%p\n",*testa);
-    printf("%d\n",(*testa)->priority);
+    printf("%d\n",(*testa)->p_priority);
 
     printf("Scannerizzo tutta la lista stampando le priorità\n");
     pcb_t *scan=(*testa);
     while(scan!=NULL){
-        printf("Priorita %d\n",scan->priority);
+        printf("Priorita %d\n",scan->p_priority);
         scan=scan->p_next;
     }
 }
@@ -82,9 +82,9 @@ void TestheadProcQ(){
     printer=headProcQ(*testa);
     printf("Dovrebbe essere nil: %p\n",printer);
 
-    elem->priority=1;
+    elem->p_priority=1;
     insertProcQ(testa,elem);
-    elem2->priority=10;
+    elem2->p_priority=10;
     insertProcQ(testa,elem2);
     printf("Indirizzo elem2\n");
     printf("%p\n",elem2);
@@ -108,12 +108,12 @@ void TestremoveProcQ(){
     printer=removeProcQ(testa);
     printf("Dovrebbe essere nil: %p\n",printer);
 
-    elem->priority=10;
+    elem->p_priority=10;
     insertProcQ(testa,elem);
     
     printf("Indirizzo elem\n");
     printf("%p\n",elem);
-    elem2->priority=1;
+    elem2->p_priority=1;
     insertProcQ(testa,elem2);
     printf("Indirizzo elem2\n");
     printf("%p\n",elem2);
@@ -140,15 +140,15 @@ void TestoutProcQ(){
     printer=outProcQ(testa,elem);
     printf("Dovrebbe essere nil: %p\n",printer);
 
-    elem->priority=10;
+    elem->p_priority=10;
     insertProcQ(testa,elem);
     printf("Indirizzo elem\n");
     printf("%p\n",elem);
-    elem2->priority=5;
+    elem2->p_priority=5;
     insertProcQ(testa,elem2);
     printf("Indirizzo elem2\n");
     printf("%p\n",elem2);
-    elem3->priority=1;
+    elem3->p_priority=1;
     insertProcQ(testa,elem3);
     printf("Indirizzo elem3\n");
     printf("%p\n",elem3);
@@ -156,7 +156,7 @@ void TestoutProcQ(){
     printf("Scansione iniziale\n");
     pcb_t *scan=(*testa);
     while(scan!=NULL){
-        printf("Priorita %d\n",scan->priority);
+        printf("Priorita %d\n",scan->p_priority);
         scan=scan->p_next;
     }
     
@@ -169,7 +169,7 @@ void TestoutProcQ(){
     printf("Scansione per vedere se e' stato tolto\n");
     scan=(*testa);
     while(scan!=NULL){
-        printf("Priorita %d\n",scan->priority);
+        printf("Priorita %d\n",scan->p_priority);
         scan=scan->p_next;
     }
 }
@@ -178,7 +178,7 @@ void TestoutProcQ(){
 void incrementauno(pcb_t * pcb, void * a){
 //La funzione usate per il test di forallProcQ
     int *counter=a;
-    pcb->priority+=(*counter);
+    pcb->p_priority+=(*counter);
 }
 
 void TestforallProcQ(){
@@ -188,17 +188,17 @@ void TestforallProcQ(){
     pcb_t * elem2=malloc(sizeof(pcb_t));
     pcb_t * elem3=malloc(sizeof(pcb_t));
     
-    elem->priority=10;
+    elem->p_priority=10;
     insertProcQ(testa,elem);
     printf("Indirizzo elem\n");
     printf("%p\n",elem);
 
-    elem2->priority=5;
+    elem2->p_priority=5;
     insertProcQ(testa,elem2);
     printf("Indirizzo elem2\n");
     printf("%p\n",elem2);
 
-    elem3->priority=1;
+    elem3->p_priority=1;
     insertProcQ(testa,elem3);
     printf("Indirizzo elem3\n");
     printf("%p\n",elem3);
@@ -206,7 +206,7 @@ void TestforallProcQ(){
     printf("Scansione con le priorità normali\n");
     pcb_t *scan=(*testa);
     while(scan!=NULL){
-        printf("Priorita %d\n",scan->priority);
+        printf("Priorita %d\n",scan->p_priority);
         scan=scan->p_next;
     }
     int *a=malloc(sizeof(int));
@@ -216,7 +216,7 @@ void TestforallProcQ(){
     printf("Scansione dopo aver chiamato la funzione\n");
     scan=(*testa);
 	 while(scan!=NULL){
-        printf("Priorita %d\n",scan->priority);
+        printf("Priorita %d\n",scan->p_priority);
         scan=scan->p_next;
     }
 }
@@ -226,11 +226,11 @@ void printTree(pcb_t *node, int level) {
     char c = '0';
     for (i = 0; i < level; i++) 
         tprint("\t\0");
-    c = c + node->priority;
+    c = c + node->p_priority;
     tprint(&c);
     tprint(" prnt=\0");
     c = '0';
-    c = c + node->p_parent->priority;
+    c = c + node->p_parent->p_priority;
     tprint(&c);
     tprint("\n\0");
     if (node->p_first_child != NULL)

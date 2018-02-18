@@ -12,7 +12,7 @@ void insertProcQ(pcb_t **head, pcb_t *p){
     */
     if((*head)){
 
-        if(p->priority>(*head)->priority){
+        if(p->p_priority>(*head)->p_priority){
 
             p->p_next=(*head);
 			(*head)=p;
@@ -23,7 +23,7 @@ void insertProcQ(pcb_t **head, pcb_t *p){
                 (*head)->p_next=p;            
             }
             else{
-                if(p->priority>(*head)->p_next->priority){
+                if(p->p_priority>(*head)->p_next->p_priority){
 
                     p->p_next=(*head)->p_next;
                     (*head)->p_next=p;

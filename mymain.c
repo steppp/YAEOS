@@ -23,11 +23,11 @@ void printTree(pcb_t *node, int level) {
 	char c = '0';
 	for (i = 0; i < level; i++) 
 		tprint("\t\0");
-	c = c + node->priority;
+	c = c + node->p_priority;
 	tprint(&c);
 	tprint(" prnt=\0");
 	c = '0';
-	c = c + node->p_parent->priority;
+	c = c + node->p_parent->p_priority;
 	tprint(&c);
 	tprint("\n\0");
 	if (node->p_first_child != NULL)

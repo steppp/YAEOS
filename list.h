@@ -8,7 +8,7 @@
 
 
 /*
-Inserts a new pcb into the queue, the position varies depending on the "priority" field of the pcb (Descending order)
+Inserts a new pcb into the queue, the position varies depending on the "p_priority" field of the pcb (Descending order)
 */
 void 	insertProcQ(pcb_t **head, pcb_t *p);
 
