@@ -2,7 +2,7 @@
 #	arm-none-eabi-ld -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x -o mymain /usr/include/uarm/crtso.o /usr/include/uarm/libuarm.o mymain.o tree.o
 
 main: p1test.o asl.h
-	arm-none-eabi-ld -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x -o p1test /usr/include/uarm/crtso.o /usr/include/uarm/libuarm.o tree.o list.o pcbFree.o semaphore.o
+	arm-none-eabi-ld -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x -o p1test /usr/include/uarm/crtso.o /usr/include/uarm/libuarm.o tree.o list.o pcbFree.o semaphore.o 
 
 asl.h: list.o tree.o semaphore.o pcbFree.o
 

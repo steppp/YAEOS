@@ -70,15 +70,17 @@ void freePcb(pcb_t *p) {
 
 pcb_t *allocPcb() {
     pcb_t *p = pcbFree_h;
+
     if (p == NULL)
         return NULL;
+
     pcbFree_h = pcbFree_h->p_next;
 
     p->p_next = NULL;
     p->p_parent = NULL;
     p->p_first_child = NULL;
     p->p_sib = NULL;
-    p->p_s = (state_t) {0};
+    //p->p_s = (state_t) {0};
     p->p_priority = 0;
     p->p_semKey = NULL;
 
