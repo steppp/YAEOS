@@ -80,9 +80,13 @@ pcb_t *allocPcb() {
     p->p_parent = NULL;
     p->p_first_child = NULL;
     p->p_sib = NULL;
+
+    //state_t np_s = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+    //p->p_s = state_t{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     p->p_s = (state_t) {0};
     p->p_priority = 0;
     p->p_semKey = NULL;
-
+    //*p = (pcb_t) {0};
     return p;
 }
