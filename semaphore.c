@@ -23,15 +23,16 @@ int insertBlocked(int *key,pcb_t *p)
             semdFree_h = semdFree_h->s_next;    
             new->s_key = key;
             new->s_procQ = NULL;
-            enqueue(&new->s_procQ,p); 
             new->s_next = semdhash[ind]; // Adding the semaphore descriptor in the bucket list 
             semdhash[ind] = new;
+
+            entry = new;
         }
         else
             return -1;
     }
-    else
-        enqueue(&entry->s_procQ,p); // Need to make sure that p->p_next == NULL
+
+    enqueue(&entry->s_procQ,p); // Need to make sure that p->p_next == NULL
     return 0;
 }
 
@@ -104,6 +105,8 @@ void fillFreeSemd(int i)
 {
     if (i < MAXSEMD)
     {
+        if (i < ASHDSIZE)       /* while semdFree is filled the hash table is initialized */
+            semdhash[i] = NULL;
         semd_table[i].s_next = semdFree_h;
         semdFree_h = &semd_table[i];
         fillFreeSemd(i+1);
@@ -183,3 +186,7 @@ void removeEntry(semd_t **bucketlist,semd_t *entry)
     else
         removeEntry(&((*bucketlist)->s_next),entry);
 }
+
+#ifdef DEBUG
+void breaker() {};
+#endif
