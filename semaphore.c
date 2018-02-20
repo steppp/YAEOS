@@ -14,7 +14,7 @@ int insertBlocked(int *key,pcb_t *p)
     */
     int ind = hash(key);
     semd_t *entry;
-    if ((entry = hashentry(semdhash[ind],key)) != NULL)
+    if ((entry = hashentry(semdhash[ind],key)) == NULL)
     {
         if (semdFree_h != NULL)
         {
@@ -22,8 +22,9 @@ int insertBlocked(int *key,pcb_t *p)
                                                remove it from the freeSemd list*/
             semdFree_h = semdFree_h->s_next;    
             new->s_key = key;
-            new->s_procQ = p;   // The queue is empty
-            new->s_next = semdhash[ind];
+            new->s_procQ = NULL;
+            enqueue(&new->s_procQ,p); 
+            new->s_next = semdhash[ind]; // Adding the semaphore descriptor in the bucket list 
             semdhash[ind] = new;
         }
         else
@@ -165,7 +166,10 @@ int hash(int *key)
 void enqueue(pcb_t **queue,pcb_t *p)
 {
     if(*queue == NULL)
+    {
         *queue = p;
+        p->p_next = NULL;
+    }
     else
         enqueue(&((*queue)->p_next),p);
 }
