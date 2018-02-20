@@ -6,11 +6,11 @@ main: p1test.o asl.h
 
 asl.h: list.o tree.o semaphore.o pcbFree.o
 
-p1test.o: asl.h 
+p1test.o: asl.h p1test.c mymain.o
 	arm-none-eabi-gcc -c -mcpu=arm7tdmi -I /usr/include/uarm/ p1test.c
 
-mymain.o: tree.o 
-	arm-none-eabi-gcc -c -mcpu=arm7tdmi mymain.c
+mymain.o: tree.o mymain.c
+	arm-none-eabi-gcc -c -mcpu=arm7tdmi -I /usr/include/uarm/ mymain.c
 
 list.o: list.c list.h
 	arm-none-eabi-gcc -c -mcpu=arm7tdmi -I /usr/include/uarm/ list.c

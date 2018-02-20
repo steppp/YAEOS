@@ -5,10 +5,10 @@ void insertChild(pcb_t *parent, pcb_t *p) {
 	//if it has no child 
 	if (parent->p_first_child == NULL) {
 		parent->p_first_child = p;//add as first child
+		p->p_sib = NULL;
 	}
 	//if it has a child instead...
 	else _addAsLastSibl(parent->p_first_child, p);
-
 	p->p_parent = parent;
 }
 
@@ -17,8 +17,10 @@ void insertChild(pcb_t *parent, pcb_t *p) {
 */
 void _addAsLastSibl(pcb_t *node, pcb_t *p) {
 	//If node does not have siblings anymore
-	if (node->p_sib == NULL)
+	if (node->p_sib == NULL){
 		node->p_sib = p; //I add p as the last sibling
+		//p->p_sib = NULL;
+	}
 
 	else _addAsLastSibl(node->p_sib, p);
 }
@@ -26,9 +28,10 @@ void _addAsLastSibl(pcb_t *node, pcb_t *p) {
 pcb_t *removeChild(pcb_t *p) {
 	pcb_t *child = p->p_first_child;
 	//if p has no child return null
-	if (child == NULL) return NULL;
+	if (p->p_first_child == NULL) return NULL;
 
 	p->p_first_child = child->p_sib;
+	p->p_sib = NULL;
 	child->p_parent = NULL;
 	return child;
 }

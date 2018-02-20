@@ -1,15 +1,11 @@
 //#include "../facilities/libuarm.h"
 #include "/usr/include/uarm/libuarm.h"
 
-#ifndef PCB_H
-#define PCB_H
-#include "pcb.h"
-#endif
+#include <uARMconst.h>
+#include <uARMtypes.h>
 
-#ifndef TREE_H
-#define TREE_H 
+#include "pcb.h"
 #include "tree.h"
-#endif
 
 //defining null const
 #ifndef NULL
@@ -23,11 +19,11 @@ void printTree(pcb_t *node, int level) {
 	char c = '0';
 	for (i = 0; i < level; i++) 
 		tprint("\t\0");
-	c = c + node->p_priority;
+	c = c + ((int)node)%93 +33;
 	tprint(&c);
 	tprint(" prnt=\0");
 	c = '0';
-	c = c + node->p_parent->p_priority;
+	c = c + ((int)node->p_parent)%93 +33;
 	tprint(&c);
 	tprint("\n\0");
 	if (node->p_first_child != NULL)
@@ -38,7 +34,7 @@ void printTree(pcb_t *node, int level) {
 }
 
 
-int main(){
+/*int mymain(){
 
     tprint("Hello Woeorld!\n\0");
 
@@ -80,4 +76,4 @@ int main(){
 
     return 0;
 }
-
+*/

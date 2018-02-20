@@ -25,7 +25,9 @@ pcb_t 	*removeChild(pcb_t *p);
 */
 pcb_t 	*outChild(pcb_t *p);
 
-//adds the new child p as last sibling innode
+/**
+* Recursive function. Adds p as the last sibling of node.
+*/
 void 	_addAsLastSibl(pcb_t *node, pcb_t *p);
 
 /**
