@@ -40,8 +40,6 @@
 #include "pcb.h"
 #include "asl.h"
 
-#include "mymain.c"
-
 #define	MAXSEM	MAXPROC
 
 #define MAX_PCB_PRIORITY		10
@@ -52,7 +50,6 @@ int my_counter_process;
 int onesem;
 pcb_t	*procp[MAXPROC], *p, *q, *maxproc, *minproc, *proc;
 int  sem[MAXSEM];
-int onesem;
 pcb_t* head;
 
 /* This function places the specified character string in okbuf and
