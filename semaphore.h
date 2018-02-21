@@ -7,11 +7,8 @@
 #include "const.h"
 #include "pcb.h"
 
-#define HASH_MULT_CONST 0.61803398875
+#define HASH_MULT_CONST 0.6180339887498948
 
-#ifndef DEBUG
-#define DEBUG
-#endif
 /*
    Constant for the multiplcative hash; suggested by D.Knuth, should be good in most situations
 */
@@ -22,12 +19,6 @@ typedef struct semd_t
     int *s_key;
     struct pcb_t *s_procQ;
 } semd_t;
-
-#ifdef DEBUG 
-int SEMDN;
-
-void breaker();
-#endif
 
 semd_t semd_table[MAXSEMD];
 semd_t *semdFree_h;

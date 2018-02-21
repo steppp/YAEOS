@@ -163,7 +163,13 @@ semd_t *hashentry(semd_t *bucketlist,int *key)
 
 int hash(int *key)
 {
-   return (int)ASHDSIZE*((long int)key*HASH_MULT_CONST-(long int)((long int)key*HASH_MULT_CONST));
+   return (int)(ASHDSIZE*((int)key*HASH_MULT_CONST-(int)((int)key*HASH_MULT_CONST))) % ASHDSIZE;
+   /*
+DISCLAIMER: the modulo operation shouldn't be necessary: HASH_MULT_CONST is > 0 and < 1, so the number
+floor(m*(iC - floor(iC))) should be between 0 and m - 1, with m being ASHDSIZE and C being HASH_MULT_CONST.
+However it seems like this calculation sometimes yields numbers greater or equal to ASHDSIZE, which is obviously
+wrong. Now, the modulo operation at the end patches this problem, but it's not an optimal solution.
+      */
 }
 
 void enqueue(pcb_t **queue,pcb_t *p)
