@@ -57,6 +57,7 @@ void freePcb(pcb_t *p) {
 	 * if head is null then the list is empty
 	 * assign the desired value to the head and set the next element's
 	 * value in the list to null
+	 */
         pcbFree_h = p;
         pcbFree_h->p_next = 0;
 
