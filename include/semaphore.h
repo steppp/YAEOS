@@ -10,7 +10,6 @@
 /*
    Constant for the multiplcative hash; suggested by D.Knuth, should be good in most situations
 */
-
 #define HASH_MULT_CONST 0.6180339887498948
 
 typedef struct semd_t
@@ -53,7 +52,7 @@ pcb_t *removeBlocked(int  *key);
 /*
    Calls the function fun on all the processes blocked on the semaphore referenced by key.
 */
-void forallBlocked(int *key, void (*fun)(pcb_t *pcb, void *), void *arg);
+void forallBlocked(int *key, void fun(pcb_t *pcb, void *), void *arg);
 
 /*
    Removes the PCB pointed by p from the queue of the semaphore where p is blocked. Hash table will be updated
@@ -88,24 +87,13 @@ void enqueue(pcb_t **queue,pcb_t *p);
 void removeEntry(semd_t **bucketlist,semd_t *entry);
 
 /*
-   Given a list of pcb, applies the function fun with the given argument to all the pcbs of the list
-*/
-void callFun(pcb_t *p,void (*fun)(pcb_t *pcb, void *),void *arg);
-
-/*
-   Removes the given PCB p from the bucketlists of index greater or equal to the value pointed by ind and returns the
-   correponding semd entry, if present in semdhash; otherwise returns NULL
-*/
-semd_t *removePCB(pcb_t *p,int *ind);
-
-/*
-   Removes the given PCB p from the given bucketlist returns the correponding semd entry, if present; otherwise returns NULL
-*/
-semd_t *removePCBfromQueue(pcb_t *p,semd_t *bucketlist);
-
-/*
    Adds all the semaphore descriptors in semdtable with index greater or equalt to i to the freeSemd list
 */
 void fillFreeSemd(int i);
+
+/* If the queue of the semaphore descriptor pointer by entry is empty removes entry from the hash table and returns it
+ * to the free semaphore descriptors list
+ */
+void hashCleanup(semd_t *entry,int ind);
 
 #endif

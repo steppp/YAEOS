@@ -23,7 +23,7 @@ int insertBlocked(int *key,pcb_t *p)
             semdFree_h = semdFree_h->s_next;    
             new->s_key = key;
             new->s_procQ = NULL;
-            new->s_next = semdhash[ind]; // Adding the semaphore descriptor in the bucket list 
+            new->s_next = semdhash[ind]; // Adding the semaphore descriptor to the bucket list 
             semdhash[ind] = new;
 
             entry = new;
@@ -32,7 +32,8 @@ int insertBlocked(int *key,pcb_t *p)
             return -1;
     }
 
-    enqueue(&entry->s_procQ,p); // Need to make sure that p->p_next == NULL
+    p->p_semKey = key;
+    enqueue(&entry->s_procQ,p);
     return 0;
 }
 
@@ -56,42 +57,32 @@ pcb_t *removeBlocked(int *key)
     {
         pcb_t *ret = entry->s_procQ;
         entry->s_procQ = entry->s_procQ->p_next;
-        if (entry->s_procQ == NULL)
-        {
-             /*remove the semaphore descriptor from the table and return it to the free smds
-                                           */
-            removeEntry(&semdhash[ind],entry);
-            entry->s_next = semdFree_h;
-            semdFree_h = entry;
-        }
-
+        hashCleanup(entry,ind);
+        ret->p_semKey = NULL;
         return ret;
     }
 }
 
-void forallBlocked(int *key, void (*fun)(pcb_t *pcb, void *), void *arg)
+void forallBlocked(int *key, void fun(pcb_t *pcb, void *), void *arg)
 {
     int ind = hash(key);
     semd_t *entry = hashentry(semdhash[ind],key);
     if (entry != NULL)
-    {
-        pcb_t *p = entry->s_procQ;
-        callFun(p,fun,arg);
-    }
+        forallProcQ(entry->s_procQ,fun,arg);
 }
 
 void outChildBlocked(pcb_t *p)
 {
-    int ind = 0;
-    semd_t *entry;
-    entry = removePCB(p,&ind); /* ind will keep the index of the bucket list which contained the semaphore p was
-    blocked on */
-    if (entry != NULL && entry->s_procQ == NULL)
+    if(p->p_semKey != NULL)
     {
-        /*remove the semaphore descriptor from the table and return it to the free smds*/
-        removeEntry(&semdhash[ind],entry);
-        entry->s_next = semdFree_h;
-        semdFree_h = entry;
+        int ind = hash(p->p_semKey);
+        semd_t *entry = hashentry(semdhash[ind],p->p_semKey);
+        if(entry != NULL)
+        {
+            outProcQ(&entry->s_procQ,p);
+            p->p_semKey = NULL;
+            hashCleanup(entry,ind);
+        }
     }
 }
 
@@ -113,44 +104,6 @@ void fillFreeSemd(int i)
     }
 }
 
-semd_t *removePCB(pcb_t *p,int *ind)
-{
-    if(*ind < ASHDSIZE)
-    {
-        semd_t *entry;
-        entry = removePCBfromQueue(p,semdhash[*ind]);
-        if (entry != NULL)
-            return entry;
-        else
-        {
-            *ind = *ind + 1;
-            return removePCB(p,ind);
-        }
-    }
-}
-
-semd_t *removePCBfromQueue(pcb_t *p,semd_t *bucketlist)
-{
-    if(bucketlist != NULL)
-    {
-        if(outProcQ(&bucketlist->s_procQ,p) != NULL)
-            return bucketlist;
-        else
-            return removePCBfromQueue(p,bucketlist->s_next);
-    }
-    else
-        return NULL;
-}
-
-void callFun(pcb_t *p,void (*fun)(pcb_t *pcb, void *),void *arg)
-{
-    if(p != NULL)
-    {
-        fun(p,arg);
-        callFun(p->p_next,fun,arg);
-    }
-}
-
 semd_t *hashentry(semd_t *bucketlist,int *key)
 {
     if (bucketlist == NULL)
@@ -163,12 +116,14 @@ semd_t *hashentry(semd_t *bucketlist,int *key)
 
 int hash(int *key)
 {
-   return (int)(ASHDSIZE*((int)key*HASH_MULT_CONST-(int)((int)key*HASH_MULT_CONST))) % ASHDSIZE;
+    double n = ((int)key)*HASH_MULT_CONST;
+    return (int)(ASHDSIZE*(n - ((int)n))) % ASHDSIZE;
    /*
 DISCLAIMER: the modulo operation shouldn't be necessary: HASH_MULT_CONST is > 0 and < 1, so the number
 floor(m*(iC - floor(iC))) should be between 0 and m - 1, with m being ASHDSIZE and C being HASH_MULT_CONST.
 However it seems like this calculation sometimes yields numbers greater or equal to ASHDSIZE, which is obviously
-wrong. Now, the modulo operation at the end patches this problem, but it's not an optimal solution.
+wrong. Now, the modulo operation at the end patches this problem, but it's not an optimal solution. Still it should
+provide a uniform distribution of the keys.
       */
 }
 
@@ -191,4 +146,14 @@ void removeEntry(semd_t **bucketlist,semd_t *entry)
         *bucketlist = (*bucketlist)->s_next;
     else
         removeEntry(&((*bucketlist)->s_next),entry);
+}
+
+void hashCleanup(semd_t *entry,int ind)
+{
+    if (entry != NULL && entry->s_procQ == NULL)
+    {
+        removeEntry(&semdhash[ind],entry);
+        entry->s_next = semdFree_h;
+        semdFree_h = entry;
+    }
 }
