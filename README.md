@@ -18,7 +18,7 @@ To execute load the p1test file(set it as the Core file) into uArm and run it.
 
 ## Authors
 
-Please read [AUTHORS] for details on the members of the team.
+Please read [AUTHORS](AUTHORS) for details on the members of the team.
 
 ## License
 
