@@ -70,23 +70,19 @@ void freePcb(pcb_t *p) {
 }
 
 pcb_t *allocPcb() {
-    pcb_t *p = pcbFree_h;
-
+    pcb_t *p = pcbFree_h;//p is the head of pcb list
+    //if the head is NULL return NULL
     if (p == NULL) return NULL;
-
+    //The head is the next element of the head
     pcbFree_h = pcbFree_h->p_next;
-
+    //Setting all pcb_t fields to NULL/0
     p->p_next = NULL;
     p->p_parent = NULL;
     p->p_first_child = NULL;
     p->p_sib = NULL;
-
-    //state_t np_s = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
-    //p->p_s = state_t{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     p->p_s = (state_t) {0};
     p->p_priority = 0;
     p->p_semKey = NULL;
-    //*p = (pcb_t) {0};
+
     return p;
 }

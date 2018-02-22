@@ -39,7 +39,9 @@ void initPcbs();
 void freePcb(pcb_t *p);
 
 /*
- *
+ * Removes a pcb from the list of free pcbs and returns it.
+ * The returned pcb has all fields set to 0/NULL.
+ * If the free pcbs list is empty the function returns NULL.
  */
 pcb_t *allocPcb();
 
