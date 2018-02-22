@@ -1,5 +1,5 @@
-#include "semaphore.h"
-#include "list.h"
+#include  <semaphore.h>
+#include  <list.h>
 
 int insertBlocked(int *key,pcb_t *p)
 {
@@ -192,7 +192,3 @@ void removeEntry(semd_t **bucketlist,semd_t *entry)
     else
         removeEntry(&((*bucketlist)->s_next),entry);
 }
-
-#ifdef DEBUG
-void breaker() {};
-#endif
