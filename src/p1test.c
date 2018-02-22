@@ -36,9 +36,9 @@
 #include <uARMtypes.h>
 #include <libuarm.h>
 
-#include "const.h"
-#include "pcb.h"
-#include "asl.h"
+#include  <const.h>
+#include  <pcb.h>
+#include  <asl.h>
 
 #define	MAXSEM	MAXPROC
 
