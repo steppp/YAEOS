@@ -2,19 +2,20 @@
 
 
 pcb_t *insertLastElements(int currentIndex) {
-    if (currentIndex < MAXPROC) {   // non ho ancora superato la capacità
-        /* estraggo l'elemento corrente dalla lista e gli assegno come
-         * successivo l'elemento con indice appena superiore all'interno
-         * dell'array pcbFree_table
-         */
+    if (currentIndex < MAXPROC) {
+	/*
+	 * extraxt the element at the specified index from the table
+	 * and set its next element as the element of index `currentIndex + 1`
+	 * inside the array pcbFree_table  
+	 */
         pcb_t *p = &pcbFree_table[currentIndex];
         p->p_next = insertLastElements(currentIndex + 1);
 
         return p;
     }
 
-    /* se ho finito gli elementi nella pcbFree_table allora torno un
-     * puntatore vuoto
+    /*
+     * return null if there are no more elements in the freePcb_table array
      */
     return 0;
 }
@@ -22,23 +23,21 @@ pcb_t *insertLastElements(int currentIndex) {
 void append(pcb_t *p, pcb_t *currentElem, int elementsCount) {
     if (elementsCount < MAXPROC) {  // c'è ancora spazio nell'array pcbFree
         if (!currentElem->p_next) {
-            /*
-             * Se sono arrivato all'ultimo elemento (aka il puntatore
-             * all'elemento successivo è nullo) allora imposto il puntatore
-             * all'elemento successivo del nuovo elemento da inserire a nullo
-             * ed imposto il nuovo elemento come il successivo dell'ultimo
-             * elemento nella lista pcbFree
-             */
+	    /*
+	     * if last element, set the pointer to the next element of the new 
+	     * element to be inserted to null and set the new element as the next
+	     * of the last element in the pcbFree list
+	     */
             p->p_next = 0;
             currentElem->p_next = p;
             return;
         }
 
-        /*
-         * Altrimenti (non sono ancora arrivato all'ultimo elemento
-         * della lista pcbFree) faccio una chiamata ricorsiva a questo metodo
-         * per avanzare di un elemento nella tabella dei pcbFree
-         */
+	/*
+	 * otherwise (not yet encountered the last element of the pcbFree list)
+	 * perform a recursive call to this method to advance by one element
+	 * in the list
+	 */
         append(p, currentElem->p_next, elementsCount + 1);
     }
 
@@ -51,15 +50,13 @@ void initPcbs() {
 
 void freePcb(pcb_t *p) {
     if (!p)
-        // se p è nullo non faccio alcunché
         return;
 
     if (!pcbFree_h) {
-        /*
-         * Se la testa è nulla allora significa che la lista è vuota
-         * quindi assegno il valore desiderato alla testa e assegno
-         * il valore nullo al prossimo elemento della lista.
-         */
+	/*
+	 * if head is null then the list is empty
+	 * assign the desired value to the head and set the next element's
+	 * value in the list to null
         pcbFree_h = p;
         pcbFree_h->p_next = 0;
 
