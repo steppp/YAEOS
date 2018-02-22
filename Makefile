@@ -1,25 +1,36 @@
-#main: tree.o mymain.o
-#	arm-none-eabi-ld -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x -o mymain /usr/include/uarm/crtso.o /usr/include/uarm/libuarm.o mymain.o tree.o
+CC=arm-none-eabi-gcc 
+LIBS=-I /usr/include/uarm/ -I include
+OBJ=-c -mcpu=arm7tdmi 
+BUILD=build
+SRC=src
+INCLUDE=include
+ONAME=p1test
 
-main: p1test.o asl.h	
-	arm-none-eabi-gcc -nostartfiles -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x -o p1test /usr/include/uarm/crtso.o /usr/include/uarm/libuarm.o tree.o list.o pcbFree.o semaphore.o p1test.o
+all: builddir main
 
-asl.h: list.o tree.o semaphore.o pcbFree.o
+builddir: 
+	if [ ! -d "$(BUILD)" ]; then mkdir "$(BUILD)"; fi;
 
-p1test.o: p1test.c asl.h 
-	arm-none-eabi-gcc -c -mcpu=arm7tdmi -I /usr/include/uarm/ p1test.c
+main: $(BUILD)/p1test.o $(INCLUDE)/asl.h	
+	$(CC) -nostartfiles -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x -o $(ONAME) /usr/include/uarm/crtso.o /usr/include/uarm/libuarm.o $(BUILD)/tree.o $(BUILD)/list.o $(BUILD)/pcbFree.o $(BUILD)/semaphore.o $(BUILD)/p1test.o
 
-list.o: list.c list.h
-	arm-none-eabi-gcc -c -mcpu=arm7tdmi -I /usr/include/uarm/ list.c
+$(INCLUDE)/asl.h: $(BUILD)/list.o $(BUILD)/tree.o $(BUILD)/semaphore.o $(BUILD)/pcbFree.o
 
-semaphore.o: semaphore.c semaphore.h
-	arm-none-eabi-gcc -c -mcpu=arm7tdmi -I /usr/include/uarm/ semaphore.c
+$(BUILD)/p1test.o: $(SRC)/p1test.c $(INCLUDE)/asl.h 
+	$(CC) $(OBJ) $(LIBS) -o $(BUILD)/p1test.o $(SRC)/p1test.c
 
-tree.o: tree.c tree.h
-	arm-none-eabi-gcc -c -mcpu=arm7tdmi -I /usr/include/uarm/ tree.c
+$(BUILD)/list.o: $(SRC)/list.c $(INCLUDE)/list.h
+	$(CC) $(OBJ) $(LIBS) -o $(BUILD)/list.o $(SRC)/list.c
 
-pcbFree.o: pcbFree.h pcbFree.c
-	arm-none-eabi-gcc -c -mcpu=arm7tdmi -I /usr/include/uarm/ pcbFree.c	
+$(BUILD)/semaphore.o: $(SRC)/semaphore.c $(INCLUDE)/semaphore.h
+	$(CC) $(OBJ) $(LIBS) -o $(BUILD)/semaphore.o $(SRC)/semaphore.c
+
+$(BUILD)/tree.o: $(SRC)/tree.c $(INCLUDE)/tree.h
+	$(CC) $(OBJ) $(LIBS) -o $(BUILD)/tree.o $(SRC)/tree.c
+
+$(BUILD)/pcbFree.o: $(INCLUDE)/pcbFree.h $(SRC)/pcbFree.c
+	$(CC) $(OBJ) $(LIBS) -o $(BUILD)/pcbFree.o $(SRC)/pcbFree.c	
 
 clean:
-	rm *.o p1test
+	if [ -d "$(BUILD)" ]; then rm -r "$(BUILD)"; fi;
+	if [ -f $(ONAME) ]; then rm $(ONAME); fi;
