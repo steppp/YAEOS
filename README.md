@@ -1,6 +1,6 @@
 # YAEOS
 
-Operating Systems' group project - 2017/2018 , undergraduate course in Computer Science, Unibo. Professor in charge: Renzo Davoli
+Operating Systems' group project - 2017/2018 , undergraduate course in Computer Science, Unibo. Professors in charge: Renzo Davoli, Renzo Davoli
 
 ## Getting Started
 
