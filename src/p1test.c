@@ -36,9 +36,9 @@
 #include <uARMtypes.h>
 #include <libuarm.h>
 
-#include "const.h"
-#include "pcb.h"
-#include "asl.h"
+#include  <const.h>
+#include  <pcb.h>
+#include  <asl.h>
 
 #define	MAXSEM	MAXPROC
 
@@ -50,7 +50,6 @@ int my_counter_process;
 int onesem;
 pcb_t	*procp[MAXPROC], *p, *q, *maxproc, *minproc, *proc;
 int  sem[MAXSEM];
-int onesem;
 pcb_t* head;
 
 /* This function places the specified character string in okbuf and
@@ -198,7 +197,6 @@ int main() {
 	if (q!=NULL )
 		adderrbuf("ERROR: emptyChild: unexpected FALSE\n");
 	/*if the test is passed, then the node has no child at all*/
-
 	/* make procp[1],procp[2],procp[3], procp[7] children of procp[0] */
 	addokbuf("Inserting...\n");
 	insertChild(procp[0], procp[1]);
@@ -247,6 +245,7 @@ int main() {
 		adderrbuf("ERROR: outChild(procp[8]) failed\n");
 
 	/* Check removeChild */
+	
 	q = removeChild(procp[0]);
 	addokbuf("Removechild executed on 0\n");
 	if (q==procp[1])
@@ -263,12 +262,10 @@ int main() {
 	addokbuf("Removechild executed on 0\n");
 	if (q == NULL || q != procp[3])
 		adderrbuf("ERROR: removeChild(procp[0]) 2 failed\n");
-
 	q = removeChild(procp[0]);
 	addokbuf("Removechild executed on 0\n");
 	if (q == NULL || q != procp[7])
 		adderrbuf("ERROR: removeChild(procp[0]) 3 failed\n");
-
 	q=removeChild(procp[0]);
 	addokbuf("Removechild executed on 0\n");
 	if ( q!=NULL )

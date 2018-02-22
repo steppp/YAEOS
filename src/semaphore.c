@@ -1,5 +1,5 @@
-#include <semaphore.h>
-#include <list.h>
+#include  <semaphore.h>
+#include  <list.h>
 
 int insertBlocked(int *key,pcb_t *p)
 {
@@ -14,7 +14,7 @@ int insertBlocked(int *key,pcb_t *p)
     */
     int ind = hash(key);
     semd_t *entry;
-    if ((entry = hashentry(semdhash[ind],key)) != NULL)
+    if ((entry = hashentry(semdhash[ind],key)) == NULL)
     {
         if (semdFree_h != NULL)
         {
@@ -22,15 +22,17 @@ int insertBlocked(int *key,pcb_t *p)
                                                remove it from the freeSemd list*/
             semdFree_h = semdFree_h->s_next;    
             new->s_key = key;
-            new->s_procQ = p;   // The queue is empty
-            new->s_next = semdhash[ind];
+            new->s_procQ = NULL;
+            new->s_next = semdhash[ind]; // Adding the semaphore descriptor in the bucket list 
             semdhash[ind] = new;
+
+            entry = new;
         }
         else
             return -1;
     }
-    else
-        enqueue(&entry->s_procQ,p); // Need to make sure that p->p_next == NULL
+
+    enqueue(&entry->s_procQ,p); // Need to make sure that p->p_next == NULL
     return 0;
 }
 
@@ -103,6 +105,8 @@ void fillFreeSemd(int i)
 {
     if (i < MAXSEMD)
     {
+        if (i < ASHDSIZE)       /* while semdFree is filled the hash table is initialized */
+            semdhash[i] = NULL;
         semd_table[i].s_next = semdFree_h;
         semdFree_h = &semd_table[i];
         fillFreeSemd(i+1);
@@ -159,13 +163,22 @@ semd_t *hashentry(semd_t *bucketlist,int *key)
 
 int hash(int *key)
 {
-   return (int)ASHDSIZE*((long int)key*HASH_MULT_CONST-(long int)((long int)key*HASH_MULT_CONST));
+   return (int)(ASHDSIZE*((int)key*HASH_MULT_CONST-(int)((int)key*HASH_MULT_CONST))) % ASHDSIZE;
+   /*
+DISCLAIMER: the modulo operation shouldn't be necessary: HASH_MULT_CONST is > 0 and < 1, so the number
+floor(m*(iC - floor(iC))) should be between 0 and m - 1, with m being ASHDSIZE and C being HASH_MULT_CONST.
+However it seems like this calculation sometimes yields numbers greater or equal to ASHDSIZE, which is obviously
+wrong. Now, the modulo operation at the end patches this problem, but it's not an optimal solution.
+      */
 }
 
 void enqueue(pcb_t **queue,pcb_t *p)
 {
     if(*queue == NULL)
+    {
         *queue = p;
+        p->p_next = NULL;
+    }
     else
         enqueue(&((*queue)->p_next),p);
 }

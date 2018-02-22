@@ -1,11 +1,14 @@
 #ifndef LIST_H
 #define LIST_H
-#include "pcb.h"
 
-#define NULL (void*) 0
+#include <uARMconst.h>
+#include <uARMtypes.h>
+
+#include  <pcb.h>
+
 
 /*
-Inserts a new pcb into the queue, the position varies depending on the "priority" field of the pcb (Descending order)
+Inserts a new pcb into the queue, the position varies depending on the "p_priority" field of the pcb (Descending order)
 */
 void 	insertProcQ(pcb_t **head, pcb_t *p);
 
