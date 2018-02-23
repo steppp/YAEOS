@@ -8,8 +8,20 @@
 #include  <pcb.h>
 
 /*
-   Constant for the multiplcative hash; suggested by D.Knuth, should be good in most situations
+   Design choices:
+   
+   - The chosen hash function is the multiplicative hash. Despite the computational cost due to the
+   multiplication, this function has the pro of being independent of the size of the hash table. The
+   constant used for the multiplication was suggested by Donald Knuth and should be good in most
+   situations.
+
+   - The queue of PCBs waiting on a semaphore is a priority queue, where the priority, is given by
+   the PCBs' priority
+
+   - The ASHT is a chained hash table with linked lists
+
 */
+
 #define HASH_MULT_CONST 0.6180339887498948
 
 typedef struct semd_t
@@ -87,7 +99,8 @@ void enqueue(pcb_t **queue,pcb_t *p);
 void removeEntry(semd_t **bucketlist,semd_t *entry);
 
 /*
-   Adds all the semaphore descriptors in semdtable with index greater or equalt to i to the freeSemd list
+   Adds all the semaphore descriptors in semdtable with index greater or equalt to i to the freeSemd list.
+   Also initializes the asht to be empty.
 */
 void fillFreeSemd(int i);
 

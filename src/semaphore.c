@@ -33,7 +33,7 @@ int insertBlocked(int *key,pcb_t *p)
     }
 
     p->p_semKey = key;
-    enqueue(&entry->s_procQ,p);
+    insertProcQ(&entry->s_procQ,p);
     return 0;
 }
 
@@ -119,11 +119,13 @@ int hash(int *key)
     double n = ((int)key)*HASH_MULT_CONST;
     return (int)(ASHDSIZE*(n - ((int)n))) % ASHDSIZE;
    /*
-DISCLAIMER: the modulo operation shouldn't be necessary: HASH_MULT_CONST is > 0 and < 1, so the number
-floor(m*(iC - floor(iC))) should be between 0 and m - 1, with m being ASHDSIZE and C being HASH_MULT_CONST.
-However it seems like this calculation sometimes yields numbers greater or equal to ASHDSIZE, which is obviously
-wrong. Now, the modulo operation at the end patches this problem, but it's not an optimal solution. Still it should
-provide a uniform distribution of the keys.
+DISCLAIMER: the modulo operation shouldn't be necessary: x - floor(x) is a number
+greater than or equal to 0 and less than 1, so the number floor(m*(iC - floor(iC)))
+should be between 0 and m - 1, with m being ASHDSIZE, C being HASH_MULT_CONST and
+i being the key.  However it seems like this calculation sometimes yields numbers
+greater or equal to ASHDSIZE, which is obviously wrong. Now, the modulo operation
+at the end patches this problem, but it's not an optimal solution.  Still it
+should provide a uniform distribution of the keys.
       */
 }
 
