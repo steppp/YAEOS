@@ -89,11 +89,6 @@ int hash(int* key);
 semd_t *hashentry(semd_t *bucketlist,int *key);
 
 /*
-   Enqueues the given PCB p into the given queue
-*/
-void enqueue(pcb_t **queue,pcb_t *p);
-
-/*
    Removes the given entry from the given bucketlist, if present
 */
 void removeEntry(semd_t **bucketlist,semd_t *entry);
@@ -104,8 +99,8 @@ void removeEntry(semd_t **bucketlist,semd_t *entry);
 */
 void fillFreeSemd(int i);
 
-/* If the queue of the semaphore descriptor pointer by entry is empty removes entry from the hash table and returns it
- * to the free semaphore descriptors list
+/* If the queue of the semaphore descriptor pointed by entry is empty removes entry from the hash table and returns it
+ * to the free semaphore descriptors list. ind is the index of the bucketlist where entry is.
  */
 void hashCleanup(semd_t *entry,int ind);
 

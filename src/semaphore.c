@@ -129,17 +129,6 @@ should provide a uniform distribution of the keys.
       */
 }
 
-void enqueue(pcb_t **queue,pcb_t *p)
-{
-    if(*queue == NULL)
-    {
-        *queue = p;
-        p->p_next = NULL;
-    }
-    else
-        enqueue(&((*queue)->p_next),p);
-}
-
 void removeEntry(semd_t **bucketlist,semd_t *entry)
 {
     if (bucketlist == NULL || *bucketlist == NULL)
