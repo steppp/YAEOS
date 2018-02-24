@@ -38,10 +38,10 @@ semd_t *semdFree_h;
 semd_t *semdhash[ASHDSIZE];
 
 /* 
-   Inserts the PCB referenced by p in the queue of blocked processes of the semaphore descriptor with the given key.
-    If the table contains no semaphore descriptor with the given key, a new semaphore descriptor is allocated from the
-    list of free semds and is inserted the the table.
-    If it's not possible to allocate a new semd, returns -1; otherwise, returns 0.
+   Inserts the PCB referenced by p in the queue of blocked processes of the semaphore descriptor with the given
+   key.  If the table contains no semaphore descriptor with the given key, a new semaphore descriptor is allocated
+   from the list of free semds and is inserted the the table.  If it's not possible to allocate a new semd, returns
+   -1; if the given PCB is already blocked on a semaphore returns -2; otherwise, returns 0.
 */
 int insertBlocked(int *key,pcb_t *p);
 

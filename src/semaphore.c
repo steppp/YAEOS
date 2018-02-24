@@ -12,29 +12,34 @@ int insertBlocked(int *key,pcb_t *p)
        - else insert p in the queue of key
        - return 0
     */
-    int ind = hash(key);
-    semd_t *entry;
-    if ((entry = hashentry(semdhash[ind],key)) == NULL)
+    if(p->p_semKey == NULL) // quick check if p is already blocked on another semaphore
     {
-        if (semdFree_h != NULL)
+        int ind = hash(key);
+        semd_t *entry;
+        if ((entry = hashentry(semdhash[ind],key)) == NULL)
         {
-            semd_t *new = semdFree_h;       /* Allocate a new semaphore and
-                                               remove it from the freeSemd list*/
-            semdFree_h = semdFree_h->s_next;    
-            new->s_key = key;
-            new->s_procQ = NULL;
-            new->s_next = semdhash[ind]; // Adding the semaphore descriptor to the bucket list 
-            semdhash[ind] = new;
+            if (semdFree_h != NULL)
+            {
+                semd_t *new = semdFree_h;       /* Allocate a new semaphore and
+                                                   remove it from the freeSemd list*/
+                semdFree_h = semdFree_h->s_next;    
+                new->s_key = key;
+                new->s_procQ = NULL;
+                new->s_next = semdhash[ind]; // Adding the semaphore descriptor to the bucket list 
+                semdhash[ind] = new;
 
-            entry = new;
+                entry = new;
+            }
+            else
+                return -1;
         }
-        else
-            return -1;
-    }
 
-    p->p_semKey = key;
-    insertProcQ(&entry->s_procQ,p);
-    return 0;
+        p->p_semKey = key;
+        insertProcQ(&entry->s_procQ,p);
+        return 0;
+    }
+    else
+        return -2;
 }
 
 pcb_t *headBlocked(int *key)
