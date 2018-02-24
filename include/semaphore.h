@@ -15,7 +15,7 @@
    constant used for the multiplication was suggested by Donald Knuth and should be good in most
    situations.
 
-   - The queue of PCBs waiting on a semaphore is a priority queue, where the priority, is given by
+   - The queue of PCBs waiting on a semaphore is a priority queue, where the priority is given by
    the PCBs' priority
 
    - The ASHT is a chained hash table with linked lists
