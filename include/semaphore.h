@@ -77,31 +77,4 @@ void outChildBlocked(pcb_t *p);
 */
 void initASL();
 
-/*
-   Returns the hash address for the given key
-*/
-int hash(int* key);
-
-/*
-   Given a hashtable bucketlist, returns the address of the entry containing the semaphore identified by key if present,
-   NULL otherwise
-*/
-semd_t *hashentry(semd_t *bucketlist,int *key);
-
-/*
-   Removes the given entry from the given bucketlist, if present
-*/
-void removeEntry(semd_t **bucketlist,semd_t *entry);
-
-/*
-   Adds all the semaphore descriptors in semdtable with index greater or equalt to i to the freeSemd list.
-   Also initializes the asht to be empty.
-*/
-void fillFreeSemd(int i);
-
-/* If the queue of the semaphore descriptor pointed by entry is empty removes entry from the hash table and returns it
- * to the free semaphore descriptors list. ind is the index of the bucketlist where entry is.
- */
-void hashCleanup(semd_t *entry,int ind);
-
 #endif
