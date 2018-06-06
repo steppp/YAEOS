@@ -1,6 +1,12 @@
 #include  <semaphore.h>
 #include  <list.h>
 
+semd_t semd_table[MAXSEMD];
+// Head of the list of free semaphore descriptors
+semd_t *semdFree_h;
+// Semaphores descriptors hash table
+semd_t *semdhash[ASHDSIZE];
+
 /*
    Returns the hash address for the given key
 */

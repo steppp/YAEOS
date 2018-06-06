@@ -31,11 +31,11 @@ typedef struct semd_t
     struct pcb_t *s_procQ;
 } semd_t;
 
-semd_t semd_table[MAXSEMD];
+extern semd_t semd_table[MAXSEMD];
 // Head of the list of free semaphore descriptors
-semd_t *semdFree_h;
+extern semd_t *semdFree_h;
 // Semaphores descriptors hash table
-semd_t *semdhash[ASHDSIZE];
+extern semd_t *semdhash[ASHDSIZE];
 
 /* 
    Inserts the PCB referenced by p in the queue of blocked processes of the semaphore descriptor with the given

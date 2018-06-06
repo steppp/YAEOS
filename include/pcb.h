@@ -1,4 +1,3 @@
-//#define MAXPROC 10
 #ifndef PCB_H
 #define PCB_H
 
@@ -9,6 +8,7 @@ typedef struct pcb_t {
 	struct pcb_t *p_first_child;
 	struct pcb_t *p_sib;
 	state_t p_s;
+    int old_priority;
 	int p_priority;
 	int *p_semKey;
 } pcb_t;
