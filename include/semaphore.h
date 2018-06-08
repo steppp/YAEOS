@@ -59,7 +59,7 @@ pcb_t *headBlocked(int *key);
    If the processes queue of the semaphore referenced by key becomes empty, removes the corresponding semaphore
    descriptors from the hashtable and inserts it in the free semd queue.
 */
-pcb_t *removeBlocked(int  *key);
+pcb_t *removeBlocked(int *key);
 
 /*
    Calls the function fun on all the processes blocked on the semaphore referenced by key.

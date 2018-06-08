@@ -13,7 +13,7 @@ INCLUDE=include
 # name of the executable
 ONAME=p1test
 # modules of the project
-MODULES=list tree semaphore pcbFree p1test
+MODULES=list tree semaphore pcbFree p1test scheduler
 # adds a prefix with the name of the build dir to the names of the modules
 OBJ=$(patsubst %,$(BUILD)/%.o,$(MODULES))
 # global depencencies

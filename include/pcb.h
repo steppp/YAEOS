@@ -1,5 +1,6 @@
 #ifndef PCB_H
 #define PCB_H
+#include <uARMtypes.h>
 
 //pcb_t struct as defined in specifications
 typedef struct pcb_t {
