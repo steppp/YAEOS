@@ -21,4 +21,10 @@ void dispatch();
 int checkForDeadlock();
 // Returns 1 if the system is in a deadlocked state, 0 otherwise
 
+pcb_t *suspend();
+// Suspends the running process, saving its state in its pcb, and returns its address
+// Returns NULL if no processes are running
+// WARNING a dispatch should be called after this function, otherwise the processor will continue to
+// execute the previous code but the running process pointer won't point to the right process
+
 #endif // SCHEDULER

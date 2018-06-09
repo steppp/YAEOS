@@ -40,3 +40,20 @@ void dispatch()
         LDST(&runningPcb->p_s); // load the new PCB
     }
 }
+
+pcb_t *suspend()
+{
+    if (runningPcb != NULL)
+    {
+        state_t curstate;
+        pcb_t *p;
+        STST(&curstate);
+        runningPcb->p_s = curstate;
+        runningPcb->p_priority = runningPcb->oldPriority;
+        p = runningPcb;
+        runningPcb = NULL;
+        return p;
+    }
+    else
+        return NULL;
+}
