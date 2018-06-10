@@ -14,10 +14,10 @@ void P(int *semaddr)
         Otherwise, take the running process' pcb and insert it in the semaphore queue and call a
         scheduler dispatch
     */
-    pcb_t *p;
     (*semaddr)--;
     if(*semaddr < 0)
     {
+        pcb_t *p;   /* holds the former running pcb pointer*/
         p = suspend();
         readyPcbs--;
         insertBlocked(semaddr,p);
@@ -28,10 +28,10 @@ void P(int *semaddr)
 
 void V(int *semaddr)
 {
-    pcb_t *p;
     (*semaddr)++;
     if(*semaddr <= 0)
     {
+        pcb_t *p;   /* holds the unblocked pcb */
         p = removeBlocked(semaddr);
         if (p != NULL)
         {

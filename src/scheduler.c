@@ -1,4 +1,5 @@
 #include <scheduler.h>
+#include <uARMconst.h>
 #include <uARMtypes.h>
 #include <libuarm.h>
 #include <pcb.h>
@@ -23,17 +24,7 @@ void dispatch()
    */
     if (readyPcbs > 0)
     {
-        pcb_t *tmp = NULL;
-        if (runningPcb != NULL)
-        {
-            state_t curstate;
-            STST(&curstate);
-            // save the processor state in the process' pcb
-            runningPcb->p_s = curstate;
-            // restoring its old priority
-            runningPcb->p_priority = runningPcb->old_priority;
-            tmp = runningPcb;
-        }
+        pcb_t *tmp = suspend();  /* temp var to store the running pcb*/
         runningPcb = removeProcQ(&readyQueue);
         if (tmp != NULL)
             insertProcQ(&readyQueue,tmp);
@@ -45,11 +36,9 @@ pcb_t *suspend()
 {
     if (runningPcb != NULL)
     {
-        state_t curstate;
-        pcb_t *p;
-        STST(&curstate);
-        runningPcb->p_s = curstate;
-        runningPcb->p_priority = runningPcb->oldPriority;
+        pcb_t *p;   /* holds the running pcb pointer for return*/
+        runningPcb->p_s = *((state_t *) SYSBK_OLDAREA); /* save the old processor state in the process' pcb */
+        runningPcb->p_priority = runningPcb->old_priority; /* restoring its old priority */
         p = runningPcb;
         runningPcb = NULL;
         return p;
