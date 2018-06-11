@@ -1,5 +1,6 @@
 #include <uARMconst.h>
 #include <uARMtypes.h>
+#include <arch.h>
 #include <libuarm.h>
 #include <const.h>
 
@@ -15,6 +16,12 @@
 
 #include <pcb.h>
 #include <asl.h>
+
+/* Gonna move it to a header */
+typedef enum {CREATEPROCESS,TERMINATEPROCESS,SEMP,SEMV,SPECHDL,GETTIME,WAITCLOCK,IODEVOP,GETPIDS,WAITCHLD} syscall_t;
+
+/* Gonna move it to a header */
+typedef enum {SPECPGMT,SPECTLB,SPECSYSBP} traphdl_t;
 
 typedef unsigned int memaddr;
 typedef unsigned int cpu_t;
@@ -32,7 +39,7 @@ int p5p6race = 0;
 int p7ok = 0;
 int p7lock = 0;
 
-unsigned memaddr next_stack;
+memaddr next_stack;
 state_t p1state;
 state_t p2state;
 state_t p3state;
@@ -42,14 +49,15 @@ state_t p6state;
 state_t p7state;
 void *p1p1addr, *p1p0addr;
 
+int p3inc;
+
 void print(char *msg) {
 	unsigned int status;
 
 	SYSCALL(SEMP, (memaddr)&term_mutex, 0, 0);
 	while (*msg != '\0') {
-		undsigned int command = DEV_TTRS_C_TRSMCHAR | (*msg << BYTELEN);
-		status = SYSCALL(IODEVOP, command, 
-				DEV_REG_ADDR(IL_TERMINAL, 0) + 2 * WS);
+		unsigned int command = DEV_TTRS_C_TRSMCHAR | (*msg << BYTELEN);
+		status = SYSCALL(IODEVOP, command, DEV_REG_ADDR(IL_TERMINAL, 0) + 2 * WS,0);
 		if ((status & TERMSTATMASK) != TRANSM)
 			PANIC();
 		if ((status >> BYTELEN) != *msg)
@@ -70,7 +78,7 @@ memaddr get_stack_area(void) {
 
 
 void p1(void) {
-	SYSCALL(GETPIDS, (memaddr)&p1p1addr, (memaddr)&p1p0paddr, 0);
+	SYSCALL(GETPIDS, (memaddr)&p1p1addr, (memaddr)&p1p0addr, 0);
 	SYSCALL(SEMV, (memaddr)&p1sem, 0, 0);
 	SYSCALL(SEMP, (memaddr)&p1sem, 0, 0);
 
@@ -84,15 +92,16 @@ void p1a(void) {
 	SYSCALL(SEMV, (memaddr)&p1ok, 0, 0);
 	SYSCALL(SEMP, (memaddr)&p1sem, 0, 0);
 	print("p1: Test of interleaved prints\n");
-	SYSCALL(TERMINATEPROCESS, NULL, 0, 0);
+	SYSCALL(TERMINATEPROCESS, (memaddr) NULL, 0, 0);
 	print("P1 survived a terminate process syscall\n");
 	PANIC();
 }
 
 void p2(void) {
+    int i;
 	cpu_t time1, time2;
 	cpu_t usr_t1, kernel_t1, wall_t1;
-	cpu_t usr_t2, kernel_t2, wall_t2;
+	cpu_t usr_t2, kernel_t2, wall_t2, glob_t2;
 	while ((time2 - time1) < (CLOCKINTERVAL >> 1) )  {
 		time1 = getTODLO();   /* time of day     */
 		SYSCALL(WAITCLOCK, 0, 0, 0);
@@ -100,12 +109,12 @@ void p2(void) {
 	}
 	print("p2: WaitBlock Okay\n");
 
-	SYSCALL(GETCPUTIME, (memaddr)&usr_t1, (memaddr)&kernel_t1, (memaddr)&wall_t1);
+	SYSCALL(GETTIME, (memaddr)&usr_t1, (memaddr)&kernel_t1, (memaddr)&wall_t1);
 	for (i = 0; i < CLOCKLOOP; i++)
 		SYSCALL(WAITCLOCK, 0, 0, 0);
-	SYSCALL(GETCPUTIME, (memaddr)&usr_t2, (memaddr)&kernel_t2, (memaddr)&wall_t2);
+	SYSCALL(GETTIME, (memaddr)&usr_t2, (memaddr)&kernel_t2, (memaddr)&wall_t2);
 
-	SYSCALL(GETCPUTIME, (int)&glob_t2, (int)&usr_t2, 0);    /* process time */
+	SYSCALL(GETTIME, (int)&glob_t2, (int)&usr_t2, 0);    /* process time */
 
 	if (((usr_t2 - usr_t1) > MINCLOCKLOOP) || ((usr_t2 + kernel_t2 - usr_t1 - kernel_t1) < MINCLOCKLOOP) ||
 			(usr_t2 + kernel_t2 - usr_t1 - kernel_t1) > (wall_t2 - wall_t1)) 
@@ -123,7 +132,7 @@ void p3(void) {
 		case 0:
 			print("p3: first incarnation\n");
 			break;
-		case 0:
+		case 1:
 			print("p3: second incarnation\n");
 			break;
 	}
@@ -137,7 +146,7 @@ void p3(void) {
 	}
 	SYSCALL(SEMP, (memaddr)&synp3, 0, 0);
 	p3state.sp = get_stack_area();
-	SYSCALL(CREATEPROCESS, p3state, 5, 0);
+	SYSCALL(CREATEPROCESS, (memaddr)&p3state, 5, 0);
 
 	SYSCALL(SEMP, (memaddr)&synp3, 0, 0);
 
@@ -154,7 +163,7 @@ void p4a(void);
 void p4b(void);
 void p4pgm(void) {
 	unsigned int exeCode = p4pgm_old.CP15_Cause;
-	exeCode = exeCode & CAUSEMASK;
+	exeCode = CAUSE_EXCCODE_GET(exeCode);
 	switch (exeCode) {
 		case EXC_BUSINVFETCH:
 			print("pgmTrapHandler - Access non-existent memory\n");
@@ -226,7 +235,7 @@ void p4b(void) {
 	SYSCALL(SEMP, (memaddr)&testp5, 0, 0);
 
 	/* second call for SPECTRAPVEC/SPECPGMT terminate! */
-	SYSCALL(SPECTRAPVEC, SPECPGMT, (int)&p4pgm_old, (int)&p4pgm_new);
+	SYSCALL(SPECHDL, SPECPGMT, (int)&p4pgm_old, (int)&p4pgm_new);
 
 	print("error - p4b still executing\n");
 	PANIC();
@@ -245,9 +254,9 @@ void p4(void) {
 	p4sys_new.sp = get_stack_area();
 	p4sys_new.pc = (memaddr) p4sys;
 
-	SYSCALL(SPECTRAPVEC, SPECPGMT, (int)&p4pgm_old, (int)&p4pgm_new);
-	SYSCALL(SPECTRAPVEC, SPECTLB, (int)&p4tlb_old, (int)&p4tlb_new);
-	SYSCALL(SPECTRAPVEC, SPECSYSBP, (int)&p4sys_old, (int)&p4sys_new);
+	SYSCALL(SPECHDL, SPECPGMT, (int)&p4pgm_old, (int)&p4pgm_new);
+	SYSCALL(SPECHDL, SPECTLB, (int)&p4tlb_old, (int)&p4tlb_new);
+	SYSCALL(SPECHDL, SPECSYSBP, (int)&p4sys_old, (int)&p4sys_new);
 
 	print("p4a trying to access non existent memory\n");
 	*doesnotexist = *doesnotexist + 1;
@@ -298,11 +307,11 @@ void p7gc(void) {
 void p7c(void) {
 	state_t p7gcstate;
 	STST(&p7gcstate);
-	p7gcstate.pc = p7gc;
+	p7gcstate.pc = (memaddr)p7gc;
 	p7gcstate.sp = get_stack_area();
-	SYSCALL(CREATEPROCESS, p7gcstate, 5, 0);
+	SYSCALL(CREATEPROCESS, (memaddr)&p7gcstate, 5, 0);
 	p7gcstate.sp = get_stack_area();
-	SYSCALL(CREATEPROCESS, p7gcstate, 5, 0);
+	SYSCALL(CREATEPROCESS, (memaddr)&p7gcstate, 5, 0);
 	SYSCALL(SEMV, (memaddr)&p7ok, 0, 0);
 	SYSCALL(SEMP, (memaddr)&p7lock, 0, 0);
 }
@@ -310,11 +319,11 @@ void p7c(void) {
 void p7(void) {
 	state_t p7cstate;
 	STST(&p7cstate);
-	p7cstate.pc = p7c;
+	p7cstate.pc = (memaddr)p7c;
 	p7cstate.sp = get_stack_area();
-	SYSCALL(CREATEPROCESS, p7cstate, 5, 0);
+	SYSCALL(CREATEPROCESS, (memaddr)&p7cstate, 5, 0);
 	p7cstate.sp = get_stack_area();
-	SYSCALL(CREATEPROCESS, p7cstate, 5, 0);
+	SYSCALL(CREATEPROCESS, (memaddr)&p7cstate, 5, 0);
 	SYSCALL(SEMP, (memaddr)&p7ok, 0, 0);
 	SYSCALL(SEMP, (memaddr)&p7ok, 0, 0);
 	SYSCALL(SEMP, (memaddr)&p7ok, 0, 0);
@@ -357,7 +366,7 @@ void test(void) {
 	p7state.pc = (memaddr) p7;
 
 	print("test started\n");
-	SYSCALL(CREATEPROCESS, (memaddr)p1state, 10, (memaddr)&p1addr);
+	SYSCALL(CREATEPROCESS, (memaddr)&p1state, 10, (memaddr)&p1addr);
 
 	SYSCALL(GETPIDS, (memaddr)&p0addr, (memaddr)&p0paddr, 0);
 	if (p0paddr != NULL) {
@@ -365,7 +374,7 @@ void test(void) {
 		PANIC();
 	}
 
-	SYSCALL(SEMP, &p1ok, 0, 0);
+	SYSCALL(SEMP, (memaddr)&p1ok, 0, 0);
 	if (p1p0addr != p0addr) {
 		print("GETPIDS: wrong ppid of p1 process\n");
 		PANIC();
@@ -375,24 +384,24 @@ void test(void) {
 		PANIC();
 	}
 
-	SYSCALL(TERMINATEPROCESS, p1addr, 0, 0);
+	SYSCALL(TERMINATEPROCESS, (memaddr)&p1addr, 0, 0);
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	p1state.pc = (memaddr) p1a;
-	SYSCALL(CREATEPROCESS, p1state, 10, &p1addr);
+	SYSCALL(CREATEPROCESS, (memaddr)&p1state, 10, (memaddr)&p1addr);
 	SYSCALL(SEMP, (memaddr)&p1ok, 0, 0);
 	SYSCALL(SEMV, (memaddr)&p1sem, 0, 0);
 	print("p0: Test of interleaved prints\n");
 	SYSCALL(WAITCHLD, 0, 0, 0);
 
-	SYSCALL(CREATEPROCESS, (memaddr)p2state, 10, NULL);
+	SYSCALL(CREATEPROCESS, (memaddr)&p2state, 10, (memaddr)NULL);
 
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	print("p0: p2 ended\n");
 
-	SYSCALL(CREATEPROCESS, (memaddr)p3state, 1, NULL);
-	SYSCALL(CREATEPROCESS, (memaddr)p4state, 3, NULL);
-	SYSCALL(CREATEPROCESS, (memaddr)p5state, 5, NULL);
-	SYSCALL(CREATEPROCESS, (memaddr)p6state, 7, NULL);
+	SYSCALL(CREATEPROCESS, (memaddr)&p3state, 1, (memaddr)NULL);
+	SYSCALL(CREATEPROCESS, (memaddr)&p4state, 3, (memaddr)NULL);
+	SYSCALL(CREATEPROCESS, (memaddr)&p5state, 5, (memaddr)NULL);
+	SYSCALL(CREATEPROCESS, (memaddr)&p6state, 7, (memaddr)NULL);
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	SYSCALL(WAITCHLD, 0, 0, 0);
@@ -403,7 +412,7 @@ void test(void) {
 		PANIC();
 	}
 
-	SYSCALL(CREATEPROCESS, (memaddr)p7state, 1, NULL);
+	SYSCALL(CREATEPROCESS, (memaddr)&p7state, 1, (memaddr)NULL);
 	SYSCALL(WAITCHLD, 0, 0, 0);
 
 	print("test terminated (not so much to do today)\n");
