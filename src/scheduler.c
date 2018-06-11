@@ -8,9 +8,9 @@
 pcb_t *readyQueue;
 pcb_t *runningPcb;
 
-unsigned readyPcbs;
-unsigned softBlockedPcbs;
-unsigned activePcbs;
+unsigned int readyPcbs;
+unsigned int softBlockedPcbs;
+unsigned int activePcbs;
 
 void dispatch()
 {
@@ -24,7 +24,9 @@ void dispatch()
    */
     if (readyPcbs > 0)
     {
-        pcb_t *tmp = suspend();  /* temp var to store the running pcb*/
+        pcb_t *tmp = NULL;  /* temp var to store the running pcb*/
+        if (runninPcb != NULL)
+            tmp = suspend();
         runningPcb = removeProcQ(&readyQueue);
         if (tmp != NULL)
             insertProcQ(&readyQueue,tmp);

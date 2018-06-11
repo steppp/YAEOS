@@ -21,7 +21,6 @@ void P(int *semaddr)
         p = suspend();
         readyPcbs--;
         insertBlocked(semaddr,p);
-        activePcbs++;
         dispatch();
     }
 }
@@ -35,7 +34,6 @@ void V(int *semaddr)
         p = removeBlocked(semaddr);
         if (p != NULL)
         {
-            activePcbs++;
             insertProcQ(&readyQueue,p);
             readyPcbs++;
         }
