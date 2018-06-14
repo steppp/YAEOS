@@ -5,11 +5,13 @@ pcb_t *insertLastElements(int currentIndex) {
     if (currentIndex < MAXPROC) {
 	/*
 	 * extraxt the element at the specified index from the table
-	 * and set its next element as the element of index `currentIndex + 1`
-	 * inside the array pcbFree_table  
+	 * and insert it in the first position of the pcbFree_h list
+	 * then call recursively the function until the index go past
+     * the dimension of pcbFree_table
 	 */
         pcb_t *p = &pcbFree_table[currentIndex];
-        p->p_next = insertLastElements(currentIndex + 1);
+        insertFirst(p);
+        insertLastElements(currentIndex + 1);
 
         return p;
     }
@@ -20,28 +22,12 @@ pcb_t *insertLastElements(int currentIndex) {
     return 0;
 }
 
-void append(pcb_t *p, pcb_t *currentElem, int elementsCount) {
-    if (elementsCount < MAXPROC) {  // c'è ancora spazio nell'array pcbFree
-        if (!currentElem->p_next) {
-	    /*
-	     * if last element, set the pointer to the next element of the new 
-	     * element to be inserted to null and set the new element as the next
-	     * of the last element in the pcbFree list
-	     */
-            p->p_next = 0;
-            currentElem->p_next = p;
-            return;
-        }
+void insertFirst(pcb_t *p) {
+    if (!p)
+        return;
 
-	/*
-	 * otherwise (not yet encountered the last element of the pcbFree list)
-	 * perform a recursive call to this method to advance by one element
-	 * in the list
-	 */
-        append(p, currentElem->p_next, elementsCount + 1);
-    }
-
-    return;
+    p->p_next = pcbFree_h;
+    pcbFree_h = p;
 }
 
 void initPcbs() {
@@ -49,22 +35,10 @@ void initPcbs() {
 }
 
 void freePcb(pcb_t *p) {
-    if (!p)
-        return;
-
-    if (!pcbFree_h) {
-	/*
-	 * if head is null then the list is empty
-	 * assign the desired value to the head and set the next element's
-	 * value in the list to null
-	 */
-        pcbFree_h = p;
-        pcbFree_h->p_next = 0;
-
-        return;
-    }
-
-    append(p, pcbFree_h, 1);
+    /*
+     * insert the new pcb in first position
+     */
+    insertFirst(p);
 }
 
 pcb_t *allocPcb() {
