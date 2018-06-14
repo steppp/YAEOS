@@ -1,7 +1,6 @@
 #include  <pcbFree.h>
 
-
-pcb_t *insertLastElements(int currentIndex) {
+void insertLastElements(int currentIndex) {
     if (currentIndex < MAXPROC) {
 	/*
 	 * extraxt the element at the specified index from the table
@@ -12,14 +11,7 @@ pcb_t *insertLastElements(int currentIndex) {
         pcb_t *p = &pcbFree_table[currentIndex];
         insertFirst(p);
         insertLastElements(currentIndex + 1);
-
-        return p;
     }
-
-    /*
-     * return null if there are no more elements in the freePcb_table array
-     */
-    return 0;
 }
 
 void insertFirst(pcb_t *p) {
@@ -31,7 +23,7 @@ void insertFirst(pcb_t *p) {
 }
 
 void initPcbs() {
-    pcbFree_h = insertLastElements(0);
+    insertLastElements(0);
 }
 
 void freePcb(pcb_t *p) {
