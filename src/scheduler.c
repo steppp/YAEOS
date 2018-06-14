@@ -15,9 +15,9 @@ unsigned int activePcbs;
 void dispatch()
 {
     /*
-        Check if there are processes in the ready queue. 
-            If there are, check if there is a running process. 
-                If there is one, load CPU state in a temp variable and save a temp pointer to it. 
+        Check if there are processes in the ready queue.
+            If there are, check if there is a running process.
+                If there is one, load CPU state in a temp variable and save a temp pointer to it.
                 Load the first process in the ready queue on the cpu, removing it
             Else
                 do nothing
@@ -25,7 +25,7 @@ void dispatch()
     if (readyPcbs > 0)
     {
         pcb_t *tmp = NULL;  /* temp var to store the running pcb*/
-        if (runninPcb != NULL)
+        if (runningPcb != NULL)
             tmp = suspend();
         runningPcb = removeProcQ(&readyQueue);
         if (tmp != NULL)

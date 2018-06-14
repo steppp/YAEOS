@@ -4,6 +4,7 @@
 #include <pcb.h>
 #include <list.h>
 #include <semaphore.h>
+#include <pcbFree.h>
 
 void P(int *semaddr)
 {
@@ -38,4 +39,21 @@ void V(int *semaddr)
             readyPcbs++;
         }
     }
+}
+
+int createProcess(state_t *statep, int priority, void **cpid){
+	pcb_t *newproc= allocPcb();
+	if ( newproc != NULL ){
+		newproc->p_parent=runningPcb;
+		newproc->p_s=*statep;
+		newproc->old_priority=newproc->p_priority=priority;
+		*cpid=newproc;
+		//TODO: Se aggiungiamo WaitingProcess, bisogna modificare, rimuovere questo commento prima di sacrificarlo a Davoli
+		return 0;
+
+	}
+	else{
+		//You can't create a new Process, return -1
+		return -1;
+	}
 }
