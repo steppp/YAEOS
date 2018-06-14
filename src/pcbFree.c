@@ -1,5 +1,13 @@
 #include  <pcbFree.h>
 
+void insertFirst(pcb_t *p) {
+    if (!p)
+        return;
+
+    p->p_next = pcbFree_h;
+    pcbFree_h = p;
+}
+
 void insertLastElements(int currentIndex) {
     if (currentIndex < MAXPROC) {
 	/*
@@ -12,14 +20,6 @@ void insertLastElements(int currentIndex) {
         insertFirst(p);
         insertLastElements(currentIndex + 1);
     }
-}
-
-void insertFirst(pcb_t *p) {
-    if (!p)
-        return;
-
-    p->p_next = pcbFree_h;
-    pcbFree_h = p;
 }
 
 void initPcbs() {
