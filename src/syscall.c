@@ -21,7 +21,6 @@ void P(int *semaddr)
     {
         pcb_t *p;   /* holds the former running pcb pointer*/
         p = suspend();
-        readyPcbs--;
         insertBlocked(semaddr,p);
         dispatch();
     }
@@ -50,9 +49,12 @@ int createProcess(state_t *statep, int priority, void **cpid){
 		newproc->p_s=*statep;
 		newproc->old_priority=newproc->p_priority=priority;
 		*cpid=newproc;
+        newproc->waitingOnIO = 0;
+        activePcbs++;
+        insertProcQ(&readyQueue,newproc);
+        readyPcbs++;
 		//TODO: Se aggiungiamo WaitingProcess, bisogna modificare, rimuovere questo commento prima di sacrificarlo a Davoli
 		return 0;
-
 	}
 	else{
 		//You can't create a new Process, return -1
@@ -65,6 +67,13 @@ void killProcessSubtree(pcb_t *pcb){
 	if(pcb == runningPcb) runningPcb = NULL; 
 	pcb_t *child;
 	while ((child=removeChild(pcb)) !=NULL) killProcessSubtree(child);
+    if (outProcQ(&readyQueue,pcb) != NULL) /* removing it from ready queue*/
+        readyPcbs--;
+    if (pcb->waitingOnIO)
+        softBlockedPcbs--;
+    else
+        activePcbs--;
+    outChildBlocked(pcb); /* removing the pcb from any queue it's blocked on */
 	freePcb(pcb);
 }
 
@@ -78,5 +87,3 @@ int terminateProcess(void * pid){
 	if (runningPcb==NULL) dispatch();
 	return 0;	
 }
-
-

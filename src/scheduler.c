@@ -28,6 +28,7 @@ void dispatch()
         if (runningPcb != NULL)
             tmp = suspend();
         runningPcb = removeProcQ(&readyQueue);
+        readyPcbs--;
         if (tmp != NULL)
             insertProcQ(&readyQueue,tmp);
         LDST(&runningPcb->p_s); // load the new PCB

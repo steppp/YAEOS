@@ -111,7 +111,7 @@ void forallBlocked(int *key, void fun(pcb_t *pcb, void *), void *arg)
 
 void outChildBlocked(pcb_t *p)
 {
-    if(p->p_semKey != NULL)
+    if(p != NULL && p->p_semKey != NULL)
     {
         int ind = hash(p->p_semKey);
         semd_t *entry = hashentry(semdhash[ind],p->p_semKey);
