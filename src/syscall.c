@@ -6,6 +6,7 @@
 #include <tree.h>
 #include <semaphore.h>
 #include <pcbFree.h>
+#include <main.h>
 
 void P(int *semaddr)
 {

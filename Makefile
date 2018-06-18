@@ -13,11 +13,11 @@ INCLUDE=include
 # name of the executable
 ONAME=p1test
 # modules of the project
-MODULES=list tree semaphore pcbFree p1test scheduler
+MODULES=list tree semaphore pcbFree p1test scheduler interrupts syscall main
 # adds a prefix with the name of the build dir to the names of the modules
 OBJ=$(patsubst %,$(BUILD)/%.o,$(MODULES))
 # global depencencies
-_DEPS=const.h pcb.h
+_DEPS=const.h pcb.h main.h types.h
 DEPS=$(patsubst %,$(INCLUDE)/%,$(_DEPS))
 
 all: builddir executable

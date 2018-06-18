@@ -1,6 +1,7 @@
 #ifndef PCB_H
 #define PCB_H
 #include <uARMtypes.h>
+#include <types.h>
 
 //pcb_t struct as defined in specifications
 
@@ -14,6 +15,9 @@ typedef struct pcb_t {
 	int p_priority; /* Current priority */
 	int *p_semKey; /* Semaphore the process is blocked on */
     int waitingOnIO; /* Used to count the number of softblocked processes */
+    cpu_t usertime;
+    cpu_t kerneltime;
+    cpu_t wallclocktime;
 } pcb_t;
 
 #endif //PCB_H

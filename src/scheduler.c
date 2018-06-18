@@ -4,13 +4,7 @@
 #include <libuarm.h>
 #include <pcb.h>
 #include <list.h>
-
-pcb_t *readyQueue;
-pcb_t *runningPcb;
-
-unsigned int readyPcbs;
-unsigned int softBlockedPcbs;
-unsigned int activePcbs;
+#include <main.h>
 
 void dispatch()
 {
@@ -48,4 +42,10 @@ pcb_t *suspend()
     }
     else
         return NULL;
+}
+
+void increasePriority(pcb_t *p, void *arg)
+{
+    for (pcb_t *i = p; i != NULL; i = i->p_next)
+        i->p_priority++;
 }
