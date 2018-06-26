@@ -5,6 +5,8 @@
 #include <pcb.h>
 #include <list.h>
 #include <main.h>
+#include <interrupts.h>
+#include <const.h>
 
 void dispatch()
 {
@@ -25,7 +27,8 @@ void dispatch()
         readyPcbs--;
         if (tmp != NULL)
             insertProcQ(&readyQueue,tmp);
-        LDST(&runningPcb->p_s); // load the new PCB
+        updateTimer();  /* Load the new timer */
+        LDST(&runningPcb->p_s); /* load the new PCB */
     }
 }
 
@@ -47,5 +50,6 @@ pcb_t *suspend()
 void increasePriority(pcb_t *p, void *arg)
 {
     for (pcb_t *i = p; i != NULL; i = i->p_next)
-        i->p_priority++;
+        if (p->p_priority < MAXPRIO)
+            i->p_priority++;
 }

@@ -4,5 +4,6 @@
 #define MAXPROC 20
 #define MAXSEMD MAXPROC
 #define ASHDSIZE 8
+#define MAXPRIO 100
 
 #endif

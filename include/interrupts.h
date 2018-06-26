@@ -9,18 +9,11 @@
  * giving it the device register address as an argument */
 void interruptsDispatcher();
 
-int handleDisk(devreg_t *devRegAddr);
-int handleTape(devreg_t *devRegAddr);
-int handleNetwork(devreg_t *devRegAddr);
-int handlePrinter(devreg_t *devRegAddr);
-int handleTerminal(devreg_t *devRegAddr);
-
 /* Timer's Interrupt Service Routine. Intercepts the interrupt, determines the cause, takes the
  * apprioriate action and updates the intervale timer */
 int handleTimer();
 
-/* Given the TOD of the beginning of a kernel routine, calculates the elapsed time and updates the
- * timer with the minimum between timeSlice interval and pseudoclock deadline */
-void updateTimer(cpu_t TOD);
+/* Updates the timer with the minimum between timeSlice interval and pseudoclock deadline */
+void updateTimer();
 
 #endif // INTERRUPTS_H

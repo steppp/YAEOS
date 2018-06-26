@@ -70,11 +70,16 @@ void killProcessSubtree(pcb_t *pcb){
 	while ((child=removeChild(pcb)) !=NULL) killProcessSubtree(child);
     if (outProcQ(&readyQueue,pcb) != NULL) /* removing it from ready queue*/
         readyPcbs--;
-    if (pcb->waitingOnIO)
+    if (pcb->waitingOnIO)   /* Process was blocked on I/O */
         softBlockedPcbs--;
     else
+    {
+        if (pcb->p_semKey != NULL) /* Process was blocked on a nondevice semaphore */
+            (*(pcb->p_semKey))++;       /* The value of the semaphore needs to be adjusted*/
         activePcbs--;
+    }
     outChildBlocked(pcb); /* removing the pcb from any queue it's blocked on */
+    outChild(pcb);  /* Orphaning pcb */
 	freePcb(pcb);
 }
 
@@ -86,5 +91,5 @@ int terminateProcess(void * pid){
 	if(pid==NULL) pid=runningPcb;
 	killProcessSubtree(pid);
 	if (runningPcb==NULL) dispatch();
-	return 0;	
+	return 0;
 }

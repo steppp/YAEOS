@@ -8,8 +8,14 @@
 #include <pcb.h>
 #include <main.h>
 
-devhdl_t *deviceHandlers[] = {handleDisk, handleTape, handleNetwork, handlePrinter, handleTerminal};
-/* Contains the addresses of the device handling routines TODO move it to initialization */
+int disks[DEVICES];
+int tapes[DEVICES];
+int networks[DEVICES];
+int printers[DEVICES];
+int terminals[DEVICES][2];
+
+int pseudoClockTicks;    /* Number of times the pseudoclock caused an interrupt */
+int agingTicks;  /* Number of times the aging caused an interrupt */
 
 void interruptDispatcher()
 {
@@ -18,25 +24,31 @@ void interruptDispatcher()
         if line == IL_TIMER
             call the timer handler routine
         else
-            calculate the device register address from line and cause
-            call the specific device hanlder routine, giving the device register as an argument
+            
      */
     if (CAUSE_IP_GET(getCAUSE(),INT_TIMER))
         handleTimer();
     else
     {
-        for (int i = INT_DISK; i < INT_TERMINAL; i++)
+        int i;  /* Contains the interrupt line */
+        int j;  /* Contains the interrupt device */
+        for (i = INT_DISK; i <= INT_TERMINAL; i++)
             if (CAUSE_IP_GET(getCAUSE(),i))
             {
                 int bitmap = CDEV_BITMAP_ADDR(i);
-                int j;
                 for (j = 0; j < BYTELEN; j++)
                     if (bitmap & (1 << j))
                         break;
-                devreg_t *devreg = (devreg_t *) (DEV_REG_ADDR(i,j));
-                deviceHandlers[i-3](devreg);
                 break;
             }
+        /*
+           incomplete part ahead
+         */
+        switch (i)
+        {
+            case INT_DISK:
+                break;
+        }
     }
 }
 
@@ -62,54 +74,50 @@ int handleTimer()
     switch (lastTimerCause)
     {
         case PSEUDOCLOCK:
+            pseudoClockTicks++;
             while (pseudoClockSem < 0)
                 V(&pseudoClockSem);
-            updateTimer(TOD);
+            if (runningPcb == NULL)
+                dispatch();
             break;
         case TIMESLICE:
             p = suspend();
-            /* Save the user, kernel and wall clock time in p */
+            /* TODO Save the user, kernel and wall clock time in p */
             updateTimer(TOD);
             dispatch();
             break;
         case AGING:
+            agingTicks++;
             forallProcQ(readyQueue,increasePriority,NULL);
             updateTimer(TOD);
             break;
     }
 }
 
-void updateTimer(cpu_t TOD)
+void updateTimer()
 {
     unsigned int scale = *((unsigned int *) BUS_REG_TIME_SCALE);    /* Needed to conver CPU cycle in
                                                                      micro seconds */
-    cpu_t elapsedTime = (TOD - getTODLO()) / scale;    /* Approximately the time spent in the
-                                                          interval time interrupt service routine */
-    timeSliceTimer = MIN(0,timeSliceTimer - elapsedTime);
-    agingTimer = MIN(0,timeSliceTimer - elapsedTime);
-    pseudoClockTimer = MIN(0,timeSliceTimer - elapsedTime);
-    if (pseudoClockTimer <= agingTimer && pseudoClockTimer <= timeSliceTimer)
+    int pseudoDeadline, agingDeadline;
+    pseudoDeadline = (clockStart + ((pseudoClockTicks + 1)*PSEUDOCLOCKPERIOD)*scale - getTODLO());
+    /* Time remaining until the next pseudoClockTick, in numbers of CPU cycles */
+    if (pseudoDeadline <= TIMESLICEPERIOD*scale)
     {
-        lastTimerCause = PSEUDOCLOCK;
-        setTIMER(pseudoClockTimer * scale);
-        agingTimer -= pseudoClockTimer;
-        timeSliceTimer -= pseudoClockTimer;
-        pseudoClockTimer = PSEUDOCLOCKPERIOD - elapsedTime; /* need to be precise */
-    }
-    else if (timeSliceTimer <= pseudoClockTimer && timeSliceTimer <= agingTimer)
-    {
-        lastTimerCause = TIMESLICE;
-        setTIMER(timeSliceTimer * scale);
-        pseudoClockTimer -= timeSliceTimer;
-        agingTimer -= timeSliceTimer;
-        timeSliceTimer = TIMESLICEPERIOD;
+        lastTimerCause = PSEUDOCLOCK;   /* The next interrupt will be a pseudoclock interrupt */
+        setTIMER(pseudoDeadline);
     }
     else
     {
-        lastTimerCause = AGING;
-        setTIMER(agingTimer * scale);
-        pseudoClockTimer -= agingTimer;
-        timeSliceTimer -= agingTimer;
-        agingTimer = AGINGPERIOD;
+        agingDeadline = (clockStart + ((agingTicks + 1)*AGINGPERIOD)*scale - getTODLO());
+        if (agingDeadline <= TIMESLICEPERIOD*scale)
+        {
+            lastTimerCause = AGING;
+            setTIMER(agingDeadline);
+        }
+        else
+        {
+            lastTimerCause = TIMESLICE;
+            setTIMER(TIMESLICEPERIOD*scale);
+        }
     }
 }

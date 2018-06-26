@@ -8,6 +8,7 @@
 #define TERMSTATMASK 0xff
 #define TRANSM 5
 
+#define QPAGE 1024              /* size of a stack block. Each process is given one */
 #define QPAGE_1 (QPAGE - 1)
 
 #define CLOCKINTERVAL   100000UL        /* interval to V clock semaphore */
