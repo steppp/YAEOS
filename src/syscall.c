@@ -1,5 +1,6 @@
 #include <scheduler.h>
 #include <uARMtypes.h>
+#include <uARMconst.h>
 #include <libuarm.h>
 #include <pcb.h>
 #include <list.h>
@@ -7,6 +8,9 @@
 #include <semaphore.h>
 #include <pcbFree.h>
 #include <main.h>
+
+//don't know if this is the right place to define cputtime_t...
+typedef int cputtime_t;
 
 void P(int *semaddr)
 {
@@ -107,18 +111,18 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
   state_t *trans_old, *trans_new;
   switch (type) {
     case 0:
-        trans_new = SYSBK_NEWAREA;
-        trans_old = SYSBR_OLDAREA;
+        trans_new = (state_t*) SYSBK_NEWAREA;
+        trans_old = (state_t*) SYSBK_OLDAREA;
       break;
 
     case 1:
-        trans_new = TLB_NEWAREA;
-        trans_old = TLB_OLDAREA;
+        trans_new = (state_t*) TLB_NEWAREA;
+        trans_old = (state_t*) TLB_OLDAREA;
       break;
 
     case 2:
-        trans_new = PGMTRAP_NEWAREA
-        trans_old = PGMTRAP_OLDAREA
+        trans_new = (state_t*) PGMTRAP_NEWAREA;
+        trans_old = (state_t*) PGMTRAP_OLDAREA;
       break;
 
     default:
@@ -128,4 +132,15 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
   new = trans_new;
   old = trans_old;
   return 0;
+}
+
+/* SYSCALL 6, returns times of current running processes
+ * user contains the time spent in user mode of the process
+ * kernel contains the time spent in kernel mode of the process
+ * wallclock contains the time from first process load.
+ */
+
+void getTimes(cputtime_t *user, cputtime_t *kernel, cputtime_t *wallclock) {
+
+
 }
