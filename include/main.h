@@ -14,6 +14,8 @@
 extern pcb_t *readyQueue;
 // Current running process
 extern pcb_t *runningPcb;
+// list of processes waiting for clock
+extern pcb_t *waitingQueue;
 
 extern int pseudoClockSem;  /* Semaphore for the pseudoclock. */
 

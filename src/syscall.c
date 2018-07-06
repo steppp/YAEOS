@@ -54,7 +54,6 @@ int createProcess(state_t *statep, int priority, void **cpid){
         activePcbs++;
         insertProcQ(&readyQueue,newproc);
         readyPcbs++;
-		//TODO: Se aggiungiamo WaitingProcess, bisogna modificare, rimuovere questo commento prima di sacrificarlo a Davoli
 		return 0;
 	}
 	else{
@@ -128,4 +127,23 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
   new = trans_new;
   old = trans_old;
   return 0;
+}
+
+/* SYSCALL 7: Stops the current running process and adds it to the waitingQueue, the list of all processes that are waiting for the clock*/
+
+void waitForClock(){
+
+    pcb_t *p;   // Will hold the current running pcb
+    p = suspend();
+    if (p !=NULL) insertProcQueue( &waitingQueue, p);
+    dispatch();
+
+}
+
+/* Gets called after a pseudoclock tick, removes all processes from the waitingQueue and puts them back in the readyQueue */
+void wakeUp(){
+    pcb_t *p; // Placeholder pcb pointer    
+    while ( (p=removeProcQ(&waitingQueue) != NULL ){
+        insertProcQ(&readyQueue,p);
+    }
 }

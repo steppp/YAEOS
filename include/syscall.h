@@ -17,4 +17,10 @@ void killProcessSubtree(pcb_t *pcb);
  */
 int terminateProcess(void * pid);
 
+/* SYSCALL 7: Stops the current running process and adds it to the waitingQueue, the list of all processes that are waiting for the clock*/
+void waitForClock();
+
+/* Gets called after a pseudoclock tick, removes all processes from the waitingQueue and puts them back in the readyQueue */
+void wakeUp();
+
 #endif // SYSCALL_H
