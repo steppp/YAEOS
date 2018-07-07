@@ -1,5 +1,0 @@
-La SYS5, che specifica i gestori delle trap di tipo Program Trap, TLB exception e Syscall, puo'
-essere chiamata da ogni processo e, per ognuno di essi, specifica il gestore da chiamare in caso di
-trap di quel tipo?
-
-Luca Sciullo
