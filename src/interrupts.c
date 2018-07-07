@@ -8,6 +8,7 @@
 #include <pcb.h>
 #include <main.h>
 
+// TODO: queste variabili sono presenti anche nel file main.h - devono essere dichiarate anche qui o è un errore?
 int disks[DEVICES];
 int tapes[DEVICES];
 int networks[DEVICES];

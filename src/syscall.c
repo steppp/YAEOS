@@ -51,6 +51,7 @@ int createProcess(state_t *statep, int priority, void **cpid){
 		newproc->old_priority=newproc->p_priority=priority;
 		*cpid=newproc;
         newproc->waitingOnIO = 0;
+        newproc->waitingForChild = 0;
         activePcbs++;
         insertProcQ(&readyQueue,newproc);
         readyPcbs++;
@@ -68,6 +69,13 @@ void killProcessSubtree(pcb_t *pcb){
 	if(pcb == runningPcb) runningPcb = NULL; 
 	pcb_t *child;
 	while ((child=removeChild(pcb)) !=NULL) killProcessSubtree(child);
+
+    // resume the parent process if it has been suspended using the SYS10
+    if (pcb->p_parent->waitingForChild) {       // if the parent is waiting for a child to terminate
+        V(pcb->p_parent->p_semkey);             // unblock the parent process
+        pcb->p_parent->waitingForChild = 0;     // the parent is no longer waiting for a child to terminate
+    }
+
     if (outProcQ(&readyQueue,pcb) != NULL) /* removing it from ready queue*/
         readyPcbs--;
     if (pcb->waitingOnIO)   /* Process was blocked on I/O */
@@ -78,6 +86,7 @@ void killProcessSubtree(pcb_t *pcb){
             (*(pcb->p_semKey))++;       /* The value of the semaphore needs to be adjusted*/
         activePcbs--;
     }
+
     outChildBlocked(pcb); /* removing the pcb from any queue it's blocked on */
     outChild(pcb);  /* Orphaning pcb */
 	freePcb(pcb);
@@ -92,4 +101,33 @@ int terminateProcess(void * pid){
 	killProcessSubtree(pid);
 	if (runningPcb==NULL) dispatch();
 	return 0;
+}
+
+/*
+ * SYSCALL 9
+ * Returns this process' PID and its father's one
+ * If pid or ppid is NULL, the associated PID is not returned
+ * Returns NULL as the ppid if this is the root process
+ */
+void getPids(void **pid, void **ppid) {
+    if (ppid != NULL) {
+        if (runningPcb->p_parent != NULL)
+            *ppid = runningPcb->p_parent;
+        else *ppid = NULL;
+    }
+
+    if (pid != NULL)
+        *pid = runningPcb;
+}
+
+/*
+ * SYSCALL 10
+ * Puts the process in a suspended state waiting for a child to finish its execution
+ */
+void waitChild() {
+    int c_sem = 1;  // verificare che questa dichiarazione non possa verificare casi di dangling references
+    runningPcb->waitingForChild = 1;    /* This will be used later to tell wether this process were waiting for a child to end  */
+    P(&c_sem);                          /* Suspend the process */
+
+    /* perform extra work when the process resumes  */
 }
