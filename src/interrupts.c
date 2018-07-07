@@ -124,6 +124,7 @@ int handleTimer()
     {
         case PSEUDOCLOCK:
             pseudoClockTicks++;
+            wakeUp(); // Wakes up all the processes that asked to wait for clock
             while (pseudoClockSem < 0)
                 V(&pseudoClockSem);
             if (runningPcb == NULL)
