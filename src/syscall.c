@@ -55,7 +55,6 @@ int createProcess(state_t *statep, int priority, void **cpid){
         activePcbs++;
         insertProcQ(&readyQueue,newproc);
         readyPcbs++;
-		//TODO: Se aggiungiamo WaitingProcess, bisogna modificare, rimuovere questo commento prima di sacrificarlo a Davoli
 		return 0;
 	}
 	else{
@@ -64,9 +63,9 @@ int createProcess(state_t *statep, int priority, void **cpid){
 	}
 }
 
-/* Helping function for SYSCALL2, it recursievly kills all the children of a process*/ 
+/* Helping function for SYSCALL2, it recursievly kills all the children of a process*/
 void killProcessSubtree(pcb_t *pcb){
-	if(pcb == runningPcb) runningPcb = NULL; 
+	if(pcb == runningPcb) runningPcb = NULL;
 	pcb_t *child;
 	while ((child=removeChild(pcb)) !=NULL) killProcessSubtree(child);
 
@@ -96,11 +95,66 @@ void killProcessSubtree(pcb_t *pcb){
  * What to do if it kills the running Process? It calls dispatch
  * How to check if it kills the running Process? It uses the global variable runningPcb , setting it to NULL if it kills it
  */
-int terminateProcess(void * pid){  
+int terminateProcess(void * pid){
 	if(pid==NULL) pid=runningPcb;
 	killProcessSubtree(pid);
 	if (runningPcb==NULL) dispatch();
 	return 0;
+}
+
+/* SYSCALL 5, specifies what handlers to use, depending by trap.
+ * When called a trap, the state of the calling process will copied in the 'old' area
+ * and will loaded the state in the 'new' area.
+ * Types can be:
+    - 0 (SYSCALL/breakpoint)
+    - 1 (TLB trap)
+    - 2 (Program trap)
+ * Returns 0 in case of success, -1 in case of failure.
+*/
+int specifyTrapHandler(int type, state_t *old, state_t *new) {
+  state_t *trans_old, *trans_new;
+  switch (type) {
+    case 0:
+        trans_new = SYSBK_NEWAREA;
+        trans_old = SYSBR_OLDAREA;
+      break;
+
+    case 1:
+        trans_new = TLB_NEWAREA;
+        trans_old = TLB_OLDAREA;
+      break;
+
+    case 2:
+        trans_new = PGMTRAP_NEWAREA
+        trans_old = PGMTRAP_OLDAREA
+      break;
+
+    default:
+      return -1;
+  }
+
+  new = trans_new;
+  old = trans_old;
+  return 0;
+}
+
+/* SYSCALL 7: Stops the current running process and adds it to the waitingQueue, the list of all processes that are waiting for the clock*/
+
+void waitForClock(){
+
+    pcb_t *p;   // Will hold the current running pcb
+    p = suspend();
+    if (p !=NULL) insertProcQueue( &waitingQueue, p);
+    dispatch();
+
+}
+
+/* Gets called after a pseudoclock tick, removes all processes from the waitingQueue and puts them back in the readyQueue */
+void wakeUp(){
+    pcb_t *p; // Placeholder pcb pointer    
+    while ( (p=removeProcQ(&waitingQueue) != NULL ){
+        insertProcQ(&readyQueue,p);
+    }
 }
 
 /*
