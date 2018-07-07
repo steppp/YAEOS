@@ -1,6 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 #include <types.h>
+#include <arch.h>
 #include <pcb.h>
 
 #define PSEUDOCLOCKPERIOD 100000UL  /* Pseudoclock period in microseconds */
@@ -8,7 +9,9 @@
 #define TIMESLICEPERIOD 3000UL /* Timeslice period in microseconds */
 
 #define BYTELEN 8
-#define DEVICES 8   /* number of devices */
+
+#define TRANSM 0    /* terminal related */
+#define RECV 0
 
 // ready processes list
 extern pcb_t *readyQueue;
@@ -28,10 +31,17 @@ extern cpu_t clockStart; /* TOD of the moment the inizialization is complete */
 
 /* Device semaphores */
 
-extern int disks[DEVICES];
-extern int tapes[DEVICES];
-extern int networks[DEVICES];
-extern int printers[DEVICES];
-extern int terminals[DEVICES][2];
+/*
+    These devices have only one semaphore associated with them
+    They are the devices of the categories other than Interval Timer (which is a single device),
+    Terminals (which have two semaphore associated with each of them) and the two unused categories
+    (IL_IPI and IL_CPUTIMER)
+ */
+extern int normalDevices[N_INTERRUPT_LINES - 4][DEV_PER_INT];
+/*
+    Terminals are treated differently because they are double devices (they behave like two separate
+    devices, 1 for input and the other for output)
+ */
+extern int terminals[DEV_PER_INT][2];
 
 #endif // MAIN_H
