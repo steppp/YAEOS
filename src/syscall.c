@@ -8,9 +8,7 @@
 #include <semaphore.h>
 #include <pcbFree.h>
 #include <main.h>
-
-//don't know if this is the right place to define cputtime_t...
-typedef int cputtime_t;
+#include <types.h>
 
 void P(int *semaddr)
 {
@@ -141,6 +139,5 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
  */
 
 void getTimes(cputtime_t *user, cputtime_t *kernel, cputtime_t *wallclock) {
-
 
 }

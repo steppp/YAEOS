@@ -1,8 +1,4 @@
-
 #include  <list.h>
-
-
-
 
 void insertProcQ(pcb_t **head, pcb_t *p){
     /*
@@ -19,8 +15,8 @@ void insertProcQ(pcb_t **head, pcb_t *p){
         }
         else{
             if((*head)->p_next==NULL){
-                
-                (*head)->p_next=p;            
+
+                (*head)->p_next=p;
             }
             else{
                 if(p->p_priority>(*head)->p_next->p_priority){
@@ -33,7 +29,7 @@ void insertProcQ(pcb_t **head, pcb_t *p){
                     insertProcQ(&next,p);
                 }
             }
-            
+
         }
     }
     else
@@ -81,7 +77,7 @@ pcb_t *outProcQ(pcb_t **head, pcb_t *p){
         }
         else{
             if((*head)->p_next==NULL){
-                return NULL;          
+                return NULL;
             }
             else{
                 if(p==(*head)->p_next){
@@ -93,7 +89,7 @@ pcb_t *outProcQ(pcb_t **head, pcb_t *p){
                     outProcQ(&next,p);
                 }
             }
-            
+
         }
     }
     else
@@ -112,5 +108,5 @@ void forallProcQ(pcb_t *head, void (*fun)(pcb_t *pcb, void *), void *arg){
 		fun(head,arg);
 		forallProcQ(head->p_next,fun,arg);
 	}
-	
+
 }

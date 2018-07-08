@@ -18,6 +18,13 @@ typedef struct pcb_t {
     cpu_t usertime;
     cpu_t kerneltime;
     cpu_t wallclocktime;
+		//trap handlers
+		state_t *sysbk_new;
+		state_t *sysbk_old;
+		state_t *tlb_new;
+		state_t *tlb_old;
+		state_t *pgmtrap_new;
+		state_t *pgmtrap_old;
 } pcb_t;
 
 #endif //PCB_H

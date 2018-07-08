@@ -47,6 +47,13 @@ pcb_t *allocPcb() {
     p->p_s = (state_t) {0};
     p->p_priority = 0;
     p->p_semKey = NULL;
+    //trap handlers to NULL
+    p->sysbk_new = NULL;
+    p->sysbk_old = NULL;
+    p->tlb_new = NULL;
+    p->tlb_old = NULL;
+    p->pgmtrap_new = NULL;
+    p->pgmtrap_old = NULL;
 
     return p;
 }
