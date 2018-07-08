@@ -167,7 +167,7 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
  * wallclock contains the time from first process load.
  */
 
-void getTimes(cputtime_t *user, cputtime_t *kernel, cputtime_t *wallclock) {
+void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
   user = &(runningPcb->usertime);
   kernel = &(runningPcb->kerneltime);
   wallclock = &(runningPcb->wallclocktime);

@@ -9,7 +9,4 @@ typedef unsigned int cpu_t; /* cpu time type */
 
 typedef enum {PSEUDOCLOCK, TIMESLICE, AGING} timcause_t; /* cause of interval timer interrupt type */
 
-//don't know if this is the right place to define cputtime_t...
-typedef int cputtime_t;
-
 #endif // TYPES_H
