@@ -53,10 +53,10 @@ int createProcess(state_t *statep, int priority, void **cpid){
 		newproc->old_priority=newproc->p_priority=priority;
 		*cpid=newproc;
         newproc->waitingOnIO = 0;
+        newproc->waitingForChild = 0;
         activePcbs++;
         insertProcQ(&readyQueue,newproc);
         readyPcbs++;
-		//TODO: Se aggiungiamo WaitingProcess, bisogna modificare, rimuovere questo commento prima di sacrificarlo a Davoli
 		return 0;
 	}
 	else{
@@ -70,6 +70,13 @@ void killProcessSubtree(pcb_t *pcb){
 	if(pcb == runningPcb) runningPcb = NULL;
 	pcb_t *child;
 	while ((child=removeChild(pcb)) !=NULL) killProcessSubtree(child);
+
+    // resume the parent process if it has been suspended using the SYS10
+    if (pcb->p_parent->waitingForChild) {       // if the parent is waiting for a child to terminate
+        V(pcb->p_parent->p_semKey);             // unblock the parent process
+        pcb->p_parent->waitingForChild = 0;     // the parent is no longer waiting for a child to terminate
+    }
+
     if (outProcQ(&readyQueue,pcb) != NULL) /* removing it from ready queue*/
         readyPcbs--;
     if (pcb->waitingOnIO)   /* Process was blocked on I/O */
@@ -80,6 +87,7 @@ void killProcessSubtree(pcb_t *pcb){
             (*(pcb->p_semKey))++;       /* The value of the semaphore needs to be adjusted*/
         activePcbs--;
     }
+
     outChildBlocked(pcb); /* removing the pcb from any queue it's blocked on */
     outChild(pcb);  /* Orphaning pcb */
 	freePcb(pcb);
@@ -139,4 +147,50 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
 
 void getTimes(cputtime_t *user, cputtime_t *kernel, cputtime_t *wallclock) {
 
+/* SYSCALL 7: Stops the current running process and adds it to the waitingQueue, the list of all processes that are waiting for the clock*/
+
+void waitForClock(){
+
+    pcb_t *p;   // Will hold the current running pcb
+    p = suspend();
+    if (p !=NULL) insertProcQ( &waitingQueue, p);
+    dispatch();
+
+}
+
+/* Gets called after a pseudoclock tick, removes all processes from the waitingQueue and puts them back in the readyQueue */
+void wakeUp(){
+    pcb_t *p; // Placeholder pcb pointer
+    while  (p=removeProcQ(&waitingQueue) != NULL ){
+        insertProcQ(&readyQueue,p);
+    }
+}
+
+/*
+ * SYSCALL 9
+ * Returns this process' PID and its father's one
+ * If pid or ppid is NULL, the associated PID is not returned
+ * Returns NULL as the ppid if this is the root process
+ */
+void getPids(void **pid, void **ppid) {
+    if (ppid != NULL) {
+        if (runningPcb->p_parent != NULL)
+            *ppid = runningPcb->p_parent;
+        else *ppid = NULL;
+    }
+
+    if (pid != NULL)
+        *pid = runningPcb;
+}
+
+/*
+ * SYSCALL 10
+ * Puts the process in a suspended state waiting for a child to finish its execution
+ */
+void waitChild() {
+    int c_sem = 1;  // verificare che questa dichiarazione non possa verificare casi di dangling references
+    runningPcb->waitingForChild = 1;    /* This will be used later to tell wether this process were waiting for a child to end  */
+    P(&c_sem);                          /* Suspend the process */
+
+    /* perform extra work when the process resumes  */
 }

@@ -6,6 +6,8 @@
 pcb_t *readyQueue;
 // Current running process
 pcb_t *runningPcb;
+// list of proceses waiting for clock
+pcb_t *waitingQueue;
 
 int pseudoClockSem;  /* Semaphore for the pseudoclock. */
 
