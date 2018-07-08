@@ -17,11 +17,29 @@ void killProcessSubtree(pcb_t *pcb);
  */
 int terminateProcess(void * pid);
 
-/* SYSCALL 7: Stops the current running process and adds it to the waitingQueue, the list of all processes that are waiting for the clock*/
-void waitForClock();
+/* SYSCALL 5, specifies what handlers to use, depending by trap.
+ * When called a trap, the state of the calling process will copied in the 'old' area
+ * and will loaded the state in the 'new' area.
+ * Can be set only once a time for a process
+ * Types can be:
+    - 0 (SYSCALL/breakpoint)
+    - 1 (TLB trap)
+    - 2 (Program trap)
+ * Returns 0 in case of success, -1 in case of failure.
+*/
+int specifyTrapHandler(int type, state_t *old, state_t *new);
 
-/* Gets called after a pseudoclock tick, removes all processes from the waitingQueue and puts them back in the readyQueue */
-void wakeUp();
+/* SYSCALL 6, returns times of current running processes
+ * user contains the time spent in user mode of the process
+ * kernel contains the time spent in kernel mode of the process
+ * wallclock contains the time from first process load.
+ */
+
+void getTimes(cputtime_t *user, cputtime_t *kernel, cputtime_t *wallclock);
+
+
+/* SYSCALL 7: Stops the current running process and adds it to the pseudoClockSem*/
+void waitForClock();
 
 /*
  * SYSCALL 9

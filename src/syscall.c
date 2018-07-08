@@ -173,23 +173,15 @@ void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
   wallclock = &(runningPcb->wallclocktime);
 }
 
-/* SYSCALL 7: Stops the current running process and adds it to the waitingQueue, the list of all processes that are waiting for the clock*/
+/* SYSCALL 7: Stops the current running process and adds it to the pseudoClockSem*/
 
 void waitForClock(){
 
     pcb_t *p;   // Will hold the current running pcb
     p = suspend();
-    if (p !=NULL) insertProcQ( &waitingQueue, p);
+    if (p !=NULL) P( &pseudoClockSem, p);
     dispatch();
 
-}
-
-/* Gets called after a pseudoclock tick, removes all processes from the waitingQueue and puts them back in the readyQueue */
-void wakeUp(){
-    pcb_t *p; // Placeholder pcb pointer
-    while  (p=removeProcQ(&waitingQueue) != NULL ){
-        insertProcQ(&readyQueue,p);
-    }
 }
 
 /*
