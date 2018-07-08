@@ -121,8 +121,8 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
       break;
 
     case 1:
-        runningPcb->tbl_new = new;
-        runningPcb->tbl_old = old;
+        runningPcb->tlb_new = new;
+        runningPcb->tlb_old = old;
       break;
 
     case 2:
@@ -133,9 +133,6 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
     default:
       return -1;
   }
-
-  new = trans_new;
-  old = trans_old;
   return 0;
 }
 
@@ -146,6 +143,8 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
  */
 
 void getTimes(cputtime_t *user, cputtime_t *kernel, cputtime_t *wallclock) {
+
+}
 
 /* SYSCALL 7: Stops the current running process and adds it to the waitingQueue, the list of all processes that are waiting for the clock*/
 
