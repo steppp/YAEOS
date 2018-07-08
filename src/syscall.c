@@ -107,6 +107,7 @@ int terminateProcess(void * pid){
 /* SYSCALL 5, specifies what handlers to use, depending by trap.
  * When called a trap, the state of the calling process will copied in the 'old' area
  * and will loaded the state in the 'new' area.
+ * Can be set only once a time for a process
  * Types can be:
     - 0 (SYSCALL/breakpoint)
     - 1 (TLB trap)
@@ -116,24 +117,48 @@ int terminateProcess(void * pid){
 int specifyTrapHandler(int type, state_t *old, state_t *new) {
   switch (type) {
     case 0:
-        runningPcb->sysbk_new = new;
-        runningPcb->sysbk_old = old;
-      break;
+        //if currentProcess' areas are clean
+        if (runningPcb->sysbk_new == NULL && runningPcb->sysbk_old == NULL) {
+            //set areas
+            runningPcb->sysbk_new = new;
+            runningPcb->sysbk_old = old;
+        }
+        //else if are not clean are already set, failure! Return -1
+        else {
+            return -1;
+        }
+        break;
 
     case 1:
-        runningPcb->tlb_new = new;
-        runningPcb->tlb_old = old;
-      break;
+        //if currentProcess' areas are clean
+        if (runningPcb->tlb_new == NULL && runningPcb->tlb_old == NULL) {
+            //set areas
+            runningPcb->tlb_new = new;
+            runningPcb->tlb_old = old;
+        }
+        //else if are not clean are already set, failure! Return -1
+        else {
+            return -1;
+        }
+        break;
 
     case 2:
-        runningPcb->pgmtrap_new = new;
-        runningPcb->pgmtrap_old = old;
-      break;
+        //if currentProcess' areas are clean
+        if (runningPcb->pgmtrap_new == NULL && runningPcb->pgmtrap_old == NULL) {
+            //set areas
+            runningPcb->pgmtrap_new = new;
+            runningPcb->pgmtrap_old = old;
+        }
+        //else if are not clean are already set, failure! Return -1
+        else {
+            return -1;
+        }
+        break;
 
     default:
       return -1;
   }
-  return 0;
+  return 0; //Success!
 }
 
 /* SYSCALL 6, returns times of current running processes
@@ -143,7 +168,9 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
  */
 
 void getTimes(cputtime_t *user, cputtime_t *kernel, cputtime_t *wallclock) {
-
+  user = &(runningPcb->usertime);
+  kernel = &(runningPcb->kerneltime);
+  wallclock = &(runningPcb->wallclocktime);
 }
 
 /* SYSCALL 7: Stops the current running process and adds it to the waitingQueue, the list of all processes that are waiting for the clock*/

@@ -16,16 +16,17 @@ typedef struct pcb_t {
 	int *p_semKey;                  /* Semaphore the process is blocked on */
     int waitingOnIO;                /* Used to count the number of softblocked processes */
     int waitingForChild;            /* True if the process is waiting for a child to end */
+	//process times
     cpu_t usertime;
     cpu_t kerneltime;
     cpu_t wallclocktime;
-		//trap handlers
-		state_t *sysbk_new;
-		state_t *sysbk_old;
-		state_t *tlb_new;
-		state_t *tlb_old;
-		state_t *pgmtrap_new;
-		state_t *pgmtrap_old;
+	//trap handlers
+	state_t *sysbk_new;
+	state_t *sysbk_old;
+	state_t *tlb_new;
+	state_t *tlb_old;
+	state_t *pgmtrap_new;
+	state_t *pgmtrap_old;
 } pcb_t;
 
 #endif //PCB_H
