@@ -106,21 +106,20 @@ int terminateProcess(void * pid){
  * Returns 0 in case of success, -1 in case of failure.
 */
 int specifyTrapHandler(int type, state_t *old, state_t *new) {
-  state_t *trans_old, *trans_new;
   switch (type) {
     case 0:
-        trans_new = (state_t*) SYSBK_NEWAREA;
-        trans_old = (state_t*) SYSBK_OLDAREA;
+        runningPcb->sysbk_new = new;
+        runningPcb->sysbk_old = old;
       break;
 
     case 1:
-        trans_new = (state_t*) TLB_NEWAREA;
-        trans_old = (state_t*) TLB_OLDAREA;
+        runningPcb->tbl_new = new;
+        runningPcb->tbl_old = old;
       break;
 
     case 2:
-        trans_new = (state_t*) PGMTRAP_NEWAREA;
-        trans_old = (state_t*) PGMTRAP_OLDAREA;
+        runningPcb->pgmtrap_new = new;
+        runningPcb->pgmtrap_old = old;
       break;
 
     default:
