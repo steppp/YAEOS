@@ -10,7 +10,7 @@
 
 #define BYTELEN 8
 
-#define TRANSM 0    /* terminal related */
+#define TRANSM 1    /* terminal related */
 #define RECV 0
 
 // ready processes list

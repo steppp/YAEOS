@@ -40,7 +40,7 @@ int specifyTrapHandler(int type, state_t *old, state_t *new);
  * wallclock contains the time from first process load.
  */
 
-void getTimes(cputtime_t *user, cputtime_t *kernel, cputtime_t *wallclock);
+void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock);
 
 
 /* SYSCALL 7: Stops the current running process and adds it to the pseudoClockSem*/
@@ -73,5 +73,14 @@ void getPids(void **pid, void **ppid);
  * Puts the process in a suspended state waiting for a child to finish its execution
  */
 void waitChild();
+
+// Hander for program Traps
+void pgmTrapHandler();
+
+// Handler for tlb
+void tlbHandler();
+
+// Handler for Syscalls/breakpoints
+void sysHandler();
 
 #endif // SYSCALL_H

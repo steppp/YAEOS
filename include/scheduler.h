@@ -2,15 +2,6 @@
 #define SCHEDULER
 #include <pcb.h>
 
-// Hander for program Traps
-void pgmTrapHandler();
-
-// Handler for tlb
-void tlbHandler();
-
-// Handler for Syscalls/breakpoints
-void sysHandler();
-
 // Stops the running process and puts it in the readyQueue
 // Loads the first process in the ready queue and runs it
 void dispatch();

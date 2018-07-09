@@ -18,15 +18,6 @@
 #include <pcb.h>
 #include <asl.h>
 
-/* Gonna move it to a header */
-typedef enum {CREATEPROCESS,TERMINATEPROCESS,SEMP,SEMV,SPECHDL,GETTIME,WAITCLOCK,IODEVOP,GETPIDS,WAITCHLD} syscall_t;
-
-/* Gonna move it to a header */
-typedef enum {SPECPGMT,SPECTLB,SPECSYSBP} traphdl_t;
-
-typedef unsigned int memaddr;
-typedef unsigned int cpu_t;
-
 int term_mutex = 1;
 int p1sem = 0;
 int p1ok = 0;
