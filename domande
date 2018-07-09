@@ -31,3 +31,8 @@ prossimo processo che fara' una SYS8. In YAEOS invece e' possibile questo scenar
 gestiti dei buffer per i dispositivi, oppure ogni interrupt di un device e' conseguente ad una
 chiamata SYS8 (di YAEOS) quindi non va gestito alcun buffer e il processo che riceve la status word
 e' sempre il primo processo bloccato sul device che ha generato l'interrupt?
+
+Nel p2test in allegato, scritto in classe dal professore, alla riga 52, visto che si vuole scrivere
+il comando per trasmettere un carattere, da scrivere quindi nella word TRANSMCOMMAND del device
+register del terminale, l'indirizzo da passare non dovrebbe essere DEV_REG_ADDR(IL_TERMINAL,0) +
+3*WS, invece che 2*WS?
