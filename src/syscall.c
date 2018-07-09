@@ -184,6 +184,55 @@ void waitForClock(){
 
 }
 
+/*  Helper function for syscall 8 , given a register it calculates both its interrupt Line and its device number
+ *  If the interrupt Line is a terminal, it calculates if its a Recv or a Trasm command
+ *  the intLine, devNo and termIO parameters are used to return values
+ */
+
+void getDeviceFromRegister(int * intLine , int * devNo, int * termIO, unsigned int *comm_device_register){
+    /* Calculates the base dtpreg_t from the formula  "comm_device_register=devreg+sizeof(unsigned it)" */
+    unsigned int * devAddrCalculated= comm_device_register - (sizeof(unsigned int));
+    /* Given the addres of the devreg we can calculate both the intline and the devNo from the formula "devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)" 
+     * where baseIntLineSize will be the "0x80" and baseOffset the "0x40", these are both declared to improve readability 
+     */
+    unsigned int baseIntLineSize=8*(sizeof(dtpreg_t));
+    unsigned int baseOffset=4*(sizeof(dtpreg_t));
+    *intLine= ((devAddrCalculated-baseOffset)/baseIntLineSize)+3;
+    *devNo= (devAddrCalculated-baseOffset)%baseIntLineSize;
+    *termIO= -1; //Dummy value assigned just to not have a pointer to NULL in case intLine is not 7
+    if (*intLine==7){
+    /* if the Interrupt Line is 7, the register belongs to a Terminal, we need to check if its input or output
+     *      if its input(RECV) the devAddrCalculated should be equal to its actual address, so we check it against the formula "devAddrBase=0x40+((Intline-3)*0x80)+(DevNo*0x10)" and set the termIO accordingly
+     *      else its output(TRANSM) and we set the termIO accordingly
+     */
+        if (devAddrCalculated== (baseOffset+((*intLine)*baseIntLineSize)+((*devNo)*(sizeof(dtpreg_t)))){
+            *termIO=0;
+        }
+        else *termIO=1;
+    }
+}
+
+/* SYSCALL 8: 
+ *  Activates the I/O operations copying the command in the appropriate command device register
+ *  the caller will be suspended and appended to the appropiate semaphore ( using a normalDevice semaphore if the interupt Line is <7 or a terminal semaphone if =7)
+ */
+
+unsigned int ioOperation(unsigned int command, unsigned int *comm_device_register){
+
+    int intLine,devNo,termIO;
+    getDeviceFromRegister(&intLine ,&devNo, &termIO, comm_device_register);
+    if (intLine<7){
+        P(&normalDevices[intLine][devNo]);
+        *comm_device_register=command;
+    }
+    else if(intLine==7){
+        P(&terminals[devNo][termIO]);
+        *comm_device_register=command;
+    }
+    return 0;
+}
+
+
 /*
  * SYSCALL 9
  * Returns this process' PID and its father's one

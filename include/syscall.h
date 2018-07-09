@@ -1,9 +1,7 @@
 #ifndef SYSCALL_H
 #define SYSCALL_H
 
-void P(int *semaddr);
 
-void V(int *semaddr);
 
 /* SYSCALL 1, Tries to allocate a new process, if succesful configures it with the parameters and returns 0, else returns -1*/
 int createProcess(state_t *statep, int priority, void **cpid);
@@ -16,6 +14,13 @@ void killProcessSubtree(pcb_t *pcb);
  * How to check if it kills the running Process? It uses the global variable runningPcb , setting it to NULL if it kills it
  */
 int terminateProcess(void * pid);
+
+/* SYSCALL 3 , calls a P on the semaphore specified in semaddr */
+void P(int *semaddr);
+
+/* SYSCALL 4 , calls a V on the semaphore specified in semaddr */
+void V(int *semaddr);
+
 
 /* SYSCALL 5, specifies what handlers to use, depending by trap.
  * When called a trap, the state of the calling process will copied in the 'old' area
@@ -40,6 +45,20 @@ void getTimes(cputtime_t *user, cputtime_t *kernel, cputtime_t *wallclock);
 
 /* SYSCALL 7: Stops the current running process and adds it to the pseudoClockSem*/
 void waitForClock();
+
+
+/*  Helper function for syscall 8 , given a register it calculates both its interrupt Line and its device number
+ *  If the interrupt Line is a terminal, it calculates if its a Recv or a Trasm command
+ *  the intLine, devNo and termIO parameters are used to return values
+ */
+
+void getDeviceFromRegister(int * intLine , int * devNo, int * termIO, unsigned int *comm_device_register);
+/* SYSCALL 8: 
+ *  Activates the I/O operations copying the command in the appropriate command device register
+ *  the caller will be suspended and appended to the appropiate semaphore ( using a normalDevice semaphore if the interupt Line is <7 or a terminal semaphone if =7)
+ */
+
+unsigned int ioOperation(unsigned int command, unsigned int *comm_device_register);
 
 /*
  * SYSCALL 9

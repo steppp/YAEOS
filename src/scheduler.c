@@ -73,7 +73,7 @@ void sysHandler(){
          */
         if (userRegisters->cpsr==STATUS_SYS_MODE){
             //If yes it sends it handles the syscall selecting which one to call and passing the correct parameters */
-            int succesful=0; // Helper integer that will store if the syscall has ended correctly for those who return something
+            int succesful=5; // Helper integer that will store if the syscall has ended correctly for those who return something, initialized to an impossible value so the checks cant uncorrectly pass
             switch(userRegisters->a1){
                 case 1:
                     /*  a2 should contain the physical address of a processor state area at the time this instruction is executed and a3 should contain the priority level
@@ -109,14 +109,20 @@ void sysHandler(){
                     break;
                 case 6:
                     // Retrieves and returns the cpu times putting them in the appropriate return registers */
-                    getTimes((cputtime_t *)userRegisters->a1, (cputtime_t *)userRegisters->a2, (cputtime_t *)userRegisters->a3);
+                    getTimes((cpu_t *)userRegisters->a1, (cpu_t *)userRegisters->a2, (cpu_t *)userRegisters->a3);
                     break;
                 case 7:
-                    // No arguments necessary, it just calls the appropriate function */
+                    /* No arguments necessary, it just calls the appropriate function */
                     waitForClock();
                     break;
                 case 8:
-                    //TODO: Aggiungere quando creata
+                    /* a2 should contain the command and a3 should contain the device_command_register the command needs to be put into */
+                    succesful=ioOperation((unsigned int) userRegisters->a2, (unsigned int *)userRegisters->a3);
+                    userRegisters->a1=runningPcb->p_s.a1; //TODO: E' Giusto? in a1 mi serve lo status, e nell'interrupt handler me lo mette nel suo p_s.a1
+                    if (succesful!=0){
+                        tprint("Syscall 8 (IO operation) returned an error state, literally impossible (MESSAGE BY KERNEL, NOT P2TEST)");
+                        PANIC();
+                    }
                     break;
                 case 9:
                     /* TODO: Controllare se è corretto, molto probabilmente non lo è visto che le specifiche di Davoli e della tesi sono diverse
@@ -219,4 +225,11 @@ void increasePriority(pcb_t *p, void *arg)
     for (pcb_t *i = p; i != NULL; i = i->p_next)
         if (p->p_priority < MAXPRIO)
             i->p_priority++;
+}
+
+// Returns 1 if the system is in a deadlocked state, 0 otherwise
+int checkForDeadlock(){
+    // If thhere are no more processed in the ready queue and no processes are soft-blocked then the system is probably in deadlock
+    if (readyPcbs==0 && softBlockedPcbs==0) return 1;
+    else return 0;
 }
