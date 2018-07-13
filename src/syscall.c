@@ -379,8 +379,7 @@ void sysHandler(){
         *               if not, sends it to the corresponding higher level handler, if there isnt one terminates the process
     */
 
-    state_t *userRegisters = (state_t*) SYSBK_NEWAREA; /* Andrea: I have doubts, I'm gonna ask the tutor
-                                                          where the arguments are */
+    state_t *userRegisters = (state_t*) SYSBK_NEWAREA; /* Andrea: It's SYSBK_OLD apparently */
     // Checks the cause
 #if 0
     if(userRegisters->CP15_Cause==9){

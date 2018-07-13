@@ -11,7 +11,7 @@ SRC=src
 # headers folder
 INCLUDE=include
 # name of the executable
-ONAME=p1test
+ONAME=p2test
 # modules of the project
 MODULES=list tree semaphore pcbFree p2test scheduler interrupts syscall main
 # adds a prefix with the name of the build dir to the names of the modules

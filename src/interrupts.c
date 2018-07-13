@@ -148,7 +148,7 @@ void updateTimer()
     unsigned int scale = *((unsigned int *) BUS_REG_TIME_SCALE);    /* Needed to conver CPU cycle in
                                                                      micro seconds */
     int pseudoDeadline, agingDeadline;
-    pseudoDeadline = (clockStart + ((pseudoClockTicks + 1)*PSEUDOCLOCKPERIOD)*scale - getTODLO());
+    pseudoDeadline = (clockStartLO + ((pseudoClockTicks + 1)*PSEUDOCLOCKPERIOD)*scale - getTODLO());
     /* Time remaining until the next pseudoClockTick, in numbers of CPU cycles */
     if (pseudoDeadline <= TIMESLICEPERIOD*scale)
     {
@@ -157,7 +157,7 @@ void updateTimer()
     }
     else
     {
-        agingDeadline = (clockStart + ((agingTicks + 1)*AGINGPERIOD)*scale - getTODLO());
+        agingDeadline = (clockStartLO + ((agingTicks + 1)*AGINGPERIOD)*scale - getTODLO());
         if (agingDeadline <= TIMESLICEPERIOD*scale)
         {
             lastTimerCause = AGING;

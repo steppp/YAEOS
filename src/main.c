@@ -37,7 +37,7 @@ void initFirstPCB() {
     };
 
     pcb_t *pcb;
-    createProcess(&p_s, 0, &pcb);
+    createProcess(&p_s, 0, (void**)&pcb);
 }
 
 void initVars() {
