@@ -16,4 +16,6 @@ int handleTimer();
 /* Updates the timer with the minimum between timeSlice interval and pseudoclock deadline */
 void updateTimer();
 
+void interruptHandler();
+
 #endif // INTERRUPTS_H
