@@ -14,8 +14,6 @@
 pcb_t *readyQueue;
 // Current running process
 pcb_t *runningPcb;
-// list of proceses waiting for clock
-pcb_t *waitingQueue;
 
 int pseudoClockSem;  /* Semaphore for the pseudoclock. */
 
@@ -23,10 +21,10 @@ unsigned int readyPcbs; /* Number of ready processes */
 unsigned int softBlockedPcbs; /* Number of processes waiting on a I/O operation */
 unsigned int activePcbs; /* Number of active processes (not waiting on an I/O operation) */
 
+cpu_t clockStartLO;
+cpu_t clockStartHI;
+
 timcause_t lastTimerCause; /* Last timer interrupt's cause */
-cpu_t timeSliceTimer; /* Time remaining before the next timeSlice interrupt in microseconds */
-cpu_t agingTimer; /* Time remaining before the next aging interrupt in microseconds */
-cpu_t pseudoClockTimer; /* Time remaining before the next pseudoclock timer in microseconds */
 
 extern void test();
 
@@ -34,16 +32,12 @@ void initFirstPCB() {
     state_t p_s = {
         .sp = RAM_TOP - FRAMESIZE,
         .pc = (memaddr) test,
-        .cpsr = 0x1F,               // kernel mode
-        .CP15_Control = 0           // VM disabled
+        .cpsr = STATUS_ALL_INT_ENABLE(STATUS_SYS_MODE),     // kernel mode
+        .CP15_Control = CP15_CONTROL_NULL                   // VM disabled
     };
 
-    pcb_t * pcb = malloc(sizeof(pcb_t));
-
-    // here the third parameter should not be necessary
-    // however the create process function might raise an error if
-    // passing NULL as the third parameter
-    createProcess(&p_s, 0, (void **) &pcb);
+    pcb_t **pcb;
+    createProcess(&p_s, 0, (void **) pcb);
 }
 
 void initVars() {
@@ -52,20 +46,26 @@ void initVars() {
     softBlockedPcbs = 0;
 
     runningPcb = NULL;
-    waitingQueue = NULL;
 
-    timeSliceTimer = TIMESLICEPERIOD;
-    agingTimer = AGINGPERIOD;
-    pseudoClockTimer = PSEUDOCLOCKPERIOD;
+    int i, j;
+
+    for (i = 0; i < N_INTERRUPT_LINES - 4; i++)
+        for (j = 0; j < DEV_PER_INT; j++)
+            normalDevices[i][j] = 1;
+
+    for (i = 0; i < DEV_PER_INT; i++)
+        terminals[DEV_PER_INT][0] = terminals[DEV_PER_INT][1] = 1;
+
+    clockStartLO = getTODLO();
+    clockStartHI = getTODHI();
 }
 
-void initHandler(memaddr addr, void handler()) {
+void initHandler(memaddr addr, memaddr handler) {
     state_t* new_state = (state_t *) addr;
-    STST(new_state);    // copy the current state into the struct
 
-    new_state->pc = (memaddr) handler;
+    new_state->pc = handler;
     new_state->sp = RAM_TOP;
-    new_state->cpsr |= 0xC0;
+    new_state->cpsr = STATUS_ALL_INT_DISABLE(STATUS_SYS_MODE);
 }
 
 void initDataStructures() {
@@ -74,13 +74,11 @@ void initDataStructures() {
 }
 
 void init() {
-    setSTATUS(0xDF);
-
     // init NEW areas for interrupts and traps
-    initHandler(INT_NEWAREA, interruptHandler);
-    initHandler(TLB_NEWAREA, tlbHandler);
-    initHandler(PGMTRAP_NEWAREA, pgmTrapHandler);
-    initHandler(SYSBK_NEWAREA, sysHandler);
+    initHandler(INT_NEWAREA, (memaddr) interruptHandler);
+    initHandler(TLB_NEWAREA, (memaddr) tlbHandler);
+    initHandler(PGMTRAP_NEWAREA, (memaddr) pgmTrapHandler);
+    initHandler(SYSBK_NEWAREA, (memaddr) sysHandler);
 
     // init PHASE1's data structures
     initDataStructures();
@@ -89,7 +87,6 @@ void init() {
 
     // init nucleus variables
     initVars();
-
 }
 
 
