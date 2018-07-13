@@ -13,7 +13,7 @@ INCLUDE=include
 # name of the executable
 ONAME=p1test
 # modules of the project
-MODULES=list tree semaphore pcbFree p1test scheduler interrupts syscall main
+MODULES=list tree semaphore pcbFree p2test scheduler interrupts syscall main
 # adds a prefix with the name of the build dir to the names of the modules
 OBJ=$(patsubst %,$(BUILD)/%.o,$(MODULES))
 # global depencencies
@@ -28,7 +28,7 @@ builddir:
 executable: $(OBJ)
 	$(CC) -nostartfiles -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x -o $(ONAME) /usr/include/uarm/crtso.o /usr/include/uarm/libuarm.o $^
 
-$(BUILD)/p1test.o: $(SRC)/p1test.c $(INCLUDE)/asl.h $(DEPS)
+$(BUILD)/p2test.o: $(SRC)/p2test.c $(INCLUDE)/asl.h $(DEPS)
 	$(CC) $(CFLAGS) $(HDIR) -o $@ $<
 
 $(BUILD)/%.o: $(SRC)/%.c $(INCLUDE)/%.h $(DEPS)

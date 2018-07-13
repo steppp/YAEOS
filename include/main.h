@@ -27,7 +27,8 @@ extern unsigned int activePcbs;         /* Number of active processes (not waiti
 extern timcause_t lastTimerCause;       /* Last timer interrupt's cause */
 extern int pseudoClockTicks;            /* Number of times the pseudoclock caused an interrupt */
 extern int agingTicks;                  /* Number of times the aging caused an interrupt */
-extern cpu_t clockStart;                /* TOD of the moment the inizialization is complete */
+extern cpu_t clockStartLO;                /* TODLO of the moment the inizialization is complete */
+extern cpu_t clockStartHI;                /* TODHI of the moment the inizialization is complete */
 
 /* Device semaphores */
 
