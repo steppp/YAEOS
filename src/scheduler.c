@@ -54,9 +54,22 @@ void increasePriority(pcb_t *p, void *arg)
             i->p_priority++;
 }
 
-// Returns 1 if the system is in a deadlocked state, 0 otherwise
-int checkForDeadlock(){
-    // If thhere are no more processed in the ready queue and no processes are soft-blocked then the system is probably in deadlock
-    if (readyPcbs==0 && softBlockedPcbs==0) return 1;
-    else return 0;
+/* Gets called when there are no more ready processes and handles all possibilities */
+void noMoreReadyPcbs(){
+
+    /* If there are no more processed in the ready queue and no active ones the system has done its job and needs to shut down */
+    if (readyPcbs==0 && activePcbs==0){ 
+    tprint("Shutting down. Goodnight sweet prince (MESSAGE BY KERNEL, NOT P2TEST)");    
+    HALT();
+    }
+    /* If there are no more processed in the ready queue but some processes are soft-blocked then the system needs to be put in a Wait state to wait for an interrupt */
+    else if(readyPcbs==0 && softBlockedPcbs!=0){
+    tprint("Twiddling thumbs mode initialized (MESSAGE BY KERNEL, NOT P2TEST)");
+    WAIT();
+    }
+    /* If there are no more processed in the ready queue and no processes are soft-blocked then the system is probably in deadlock */
+    else if (readyPcbs==0 && softBlockedPcbs==0){
+    tprint("Deadlock detected, shutting down (MESSAGE BY KERNEL, NOT P2TEST)");    
+    PANIC();
+    }
 }

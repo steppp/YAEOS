@@ -186,19 +186,8 @@ void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
 
 void waitForClock(){
 
-#if 0
-    pcb_t *p;   // Will hold the current running pcb
-    p = suspend();
-    if (p !=NULL) P( &pseudoClockSem, p); /*
-                                            Andrea: No need to specify the process excuting the P operation
-                                            Furthermore, the operations of suspension of the process
-                                            and dispatch are taken care of in the P function itself
-                                           */
-    dispatch();
-#endif
     P(&pseudoClockSem); /* If the function is this short, we could include this line directly into
                            the Syshandler */
-
 }
 
 /*  Helper function for syscall 8 , given a register it calculates both its interrupt Line and its device number
@@ -208,34 +197,13 @@ void waitForClock(){
 
 void getDeviceFromRegister(int * intLine , int * devNo, int * termIO, unsigned int *comm_device_register){
     /* Calculates the base dtpreg_t from the formula  "comm_device_register=devreg+sizeof(unsigned it)" */
-#if 0
-    unsigned int * devAddrCalculated= comm_device_register - (sizeof(unsigned int));
-    /* Andrea: There's a constant defined in arch.h for this */
-#endif
     unsigned int devAddrCalculated= (memaddr)comm_device_register - WS;
     /* Given the addres of the devreg we can calculate both the intline and the devNo from the formula "devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)" 
      * where baseIntLineSize will be the "0x80" and baseOffset the "0x40", these are both declared to improve readability 
      */
-#if 0
-    unsigned int baseIntLineSize=8*(sizeof(dtpreg_t));
-    /* Andrea: There's a constant defined in arch.h for this */
-#endif
     unsigned int baseIntLineSize=8*DEV_REG_SIZE;
-#if 0
-    unsigned int baseOffset=4*(sizeof(dtpreg_t));
-    /* Andrea: There's a constant defined in arch.h for this */
-#endif
     unsigned int baseOffset=DEV_REG_START;
-
-#if 0
-    *intLine= ((devAddrCalculated-baseOffset)/baseIntLineSize)+3;
-    /* Andrea: There's a constant defined in arch.h for this */
-#endif
     *intLine= ((devAddrCalculated-baseOffset)/baseIntLineSize)+INT_LOWEST;
-#if 0
-    *devNo= (devAddrCalculated-baseOffset)%baseIntLineSize;
-    Little correction: need to divide by 0x10 to obtain the right devNo
-#endif
     *devNo= ((devAddrCalculated-baseOffset)%baseIntLineSize) / DEV_REG_SIZE;
     *termIO= -1; //Dummy value assigned just to not have a pointer to NULL in case intLine is not 7
     if (*intLine==7){
@@ -243,17 +211,6 @@ void getDeviceFromRegister(int * intLine , int * devNo, int * termIO, unsigned i
      *      if its input(RECV) the devAddrCalculated should be equal to its actual address, so we check it against the formula "devAddrBase=0x40+((Intline-3)*0x80)+(DevNo*0x10)" and set the termIO accordingly
      *      else its output(TRANSM) and we set the termIO accordingly
      */
-#if 0
-        if (devAddrCalculated ==
-                (baseOffset+((*intLine)*baseIntLineSize)+((*devNo)*(sizeof(dtpreg_t))))){
-            *termIO=0;
-        }
-        else *termIO=1;
-        /*  Andrea: minor error, forgot to subtract 3 from intLine; 
-            substituted some literal expressions for their macro counterpart 
-            RECV and TRANSM are defined in main.h
-        */
-#endif
         if (devAddrCalculated ==
                 (baseOffset+((*intLine - INT_LOWEST)*baseIntLineSize)+((*devNo)*DEV_REG_SIZE))){
             *termIO=RECV;
@@ -272,11 +229,6 @@ unsigned int ioOperation(unsigned int command, unsigned int *comm_device_registe
     int intLine,devNo,termIO;
     getDeviceFromRegister(&intLine ,&devNo, &termIO, comm_device_register);
     if (intLine<7){
-#if 0
-        P(&normalDevices[intLine][devNo]);
-        Andrea: minor error, intLine needs to be adjusted as the array starts from 0 and goes up to
-                    3
-#endif
         P(&normalDevices[intLine - INT_LOWEST][devNo]);
         *comm_device_register=command;
     }
@@ -320,47 +272,29 @@ void waitChild() {
 void pgmTrapHandler(){
     /* 
      *   Checks if a SYS5 has been called for the current process (The one who triggered the pgmTrap)
-     *       If it is defined, saves the current status in the old area and loads the new area in the current status of the process
+     *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
      *      If its not , calls SYS2 to abort the process
      */
-     //TODO: In caso di riattivazione a seguito della gestione di un Trap (e.g. Page Fault), l’istruzione che ha causato il trap va ripetuta.
-     // in Register 6 è inserito l'indirizzo della memoria che ha causato l'eccezione Page Fault , però non trovo ne il numero associato al PageFault, ne sono sicuro che è una cosa che dobbiamo fare noi
-    /*
-       Andrea: sono abbastanza sicuro che non ce ne occupiamo noi, ma sia l'ultima cosa che fa il
-       gestore di trap salvato in new. Lo aggiungo comunque alle domande da fare al tutor.
-     */
-        
-#if 0
+     
     if (runningPcb->pgmtrap_new !=NULL){
-        runningPcb->pgmtrap_old=  &(runningPcb->p_s);
-        runningPcb->p_s=*(runningPcb->pgmtrap_new);          
+        *(runningPcb->pgmtrap_old)=  *((state_t*)PGMTRAP_OLDAREA);
+        LDST(runningPcb->pgmtrap_new);          
     }
-    else terminateProcess();        
-    /* Andrea: it doesn't work this way. You need to get the state_t saved in PGMTRAP_OLD area and
-     * save its content (not its address) into the state_t pointed by runningPcb->pgmtrap_old. Then you need
-     * to load the trap handler saved in the state_t pointer by runningPcb->pgmtrap_new. You should
-     * never modify the state_t of the runningPcb in that way (after all runningPcb points to a
-     * process pcb, not an empty area where we save a copy. So any modification to the properties of
-     * runningPcb results in a modification of the pcb of a process. In this case the state of the
-     * running process would be lost, and that may be a problem).
-     * Same applies for tlbHandler.
-     */
-#endif 
+    else terminateProcess();     
 }
 
 void tlbHandler(){
     /* 
      *   Checks if a SYS5 has been called for the current process (The one who triggered the tlb)
-     *       If it is defined, saves the current status in the old area and loads the new area in the current status of the process
+     *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
      *      If its not , calls SYS2 to abort the process
      */
-#if 0
+     
     if (runningPcb->tlb_new !=NULL){
-        runningPcb->tlb_old=  &(runningPcb->p_s);
-        runningPcb->p_s=*(runningPcb->tlb_new);          
+        *(runningPcb->tlb_old)=  *((state_t*)TLB_OLDAREA);
+        LDST(runningPcb->tlb_new);          
     }
-    else terminateProcess();        
-#endif
+    else terminateProcess();     
 }
 
 void sysHandler(){
@@ -379,22 +313,16 @@ void sysHandler(){
         *               if not, sends it to the corresponding higher level handler, if there isnt one terminates the process
     */
 
-    state_t *userRegisters = (state_t*) SYSBK_NEWAREA; /* Andrea: It's SYSBK_OLD apparently */
-    // Checks the cause
-#if 0
-    if(userRegisters->CP15_Cause==9){
-        /* Andrea: I think this is the right way to check that */
-#endif
+    state_t *userRegisters = (state_t*) SYSBK_OLDAREA;
+    /* Checks the cause */
     if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_BREAKPOINT){
-        //Breakpoint, sends it to the higher level handler if present, if not terminates the process
-#if 0
+        /*Breakpoint, sends it to the higher level handler if present, if not terminates the process*/
+     
         if (runningPcb->sysbk_new !=NULL){
-            runningPcb->sysbk_old=  &(runningPcb->p_s);
-            runningPcb->p_s=*(runningPcb->sysbk_new);          
+            *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
+            LDST(runningPcb->sysbk_new);          
         }
-        else terminateProcess();
-        /* Andrea: go see my comment on pgmTrapHandler */
-#endif
+        else terminateProcess(); 
     }
 
     else if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_SYSCALL){
@@ -402,14 +330,9 @@ void sysHandler(){
          *  Checks if the process is running in system mode 
          */
         if (userRegisters->cpsr==STATUS_SYS_MODE){
-            //If yes it sends it handles the syscall selecting which one to call and passing the correct parameters */
-            int succesful=5; // Helper integer that will store if the syscall has ended correctly for those who return something, initialized to an impossible value so the checks cant uncorrectly pass
-            /* Andrea: prefer enumerations of states to plain numbers. There are some in types.h */
+            /* If yes it handles the syscall selecting which one to call and passing the correct parameters */
+            int succesful=5; /* Helper integer that will store if the syscall has ended correctly for those who return something, initialized to an impossible value so the checks cant uncorrectly pass*/
             switch(userRegisters->a1){
-#if 0
-                case 1:
-                    /* Andrea: see the comment above */
-#endif
                 case CREATEPROCESS:
                     /*  a2 should contain the physical address of a processor state area at the time this instruction is executed and a3 should contain the priority level
                      *  if it returns error it means that you cant allocate more processes, puts -1 in the return register
@@ -441,10 +364,10 @@ void sysHandler(){
                      */
                     succesful=specifyTrapHandler((int)userRegisters->a2, (state_t *)userRegisters->a3, (state_t *)userRegisters->a4);
 #if 0
-                    if (succesful==-1) terminateProcess();
-                    /* Andrea: minor error, 1 argument missing */
-#endif
                     if (succesful==-1) terminateProcess(runningPcb);
+                    /* Andrea: minor error, 1 argument missing Igor: Redundant, if terminateProcess doesent get any argument it will default to the runningPbc, I think it would be more elegant this way*/
+#endif
+                    if (succesful==-1) terminateProcess();
                     break;
                 case GETTIME:
                     // Retrieves and returns the cpu times putting them in the appropriate return registers */
@@ -481,20 +404,16 @@ void sysHandler(){
                 default:
                     /* 
                         * Syscall >10.
-                        * Checks if a SYS5 has been called for the current process (The one who triggered the SYSCALL)
-                        *   If it is defined, saves the current status in the old area and loads the new area in the current status of the process
-                        +   If its not , calls SYS2 to abort the process
+                        *   Checks if a SYS5 has been called for the current process (The one who triggered the SYSCALL)
+                        *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
+                        *       If its not , calls SYS2 to abort the process
                     */
-#if 0
+
                     if (runningPcb->sysbk_new !=NULL){
-
-                        runningPcb->sysbk_old=  &(runningPcb->p_s);
-                        runningPcb->p_s=*(runningPcb->sysbk_new);          
+                        *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
+                        LDST(runningPcb->sysbk_new);          
                     }
-                    else terminateProcess();
-                    /* Andrea: go see my comment on pgmTrapHandler */
-#endif
-
+                    else terminateProcess(); 
                     break;
             }
             /*
@@ -502,27 +421,24 @@ void sysHandler(){
             processor's state to the one of the process that called the syscall, eventually with the
             a1 register modified to keep the return value if needed
              */
+            LDST(userRegisters); 
         }
         else{
             /*  It was not running in kernel mode
              *  Checks if its trying to run a reserved syscall (<=10)
              *      If yes, send it to the   PgmTrap handler with the error code EXC_RESERVEDINSTR
              *      if not, sends it to the corresponding higher level handler, if there isnt one terminates the process
-            */
+             */
             if(userRegisters->a1 <= 10){
-                runningPcb->pgmtrap_old=runningPcb->sysbk_old;
-                runningPcb->pgmtrap_old->CP15_Cause=EXC_RESERVEDINSTR;
+                runningPcb->CP15_Cause=EXC_RESERVEDINSTR;
                 pgmTrapHandler();
             }
             else{
-#if 0
                 if (runningPcb->sysbk_new !=NULL){
-                    runningPcb->sysbk_old=  &(runningPcb->p_s);
-                    runningPcb->p_s=*(runningPcb->sysbk_new);          
+                    *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
+                    LDST(runningPcb->sysbk_new);          
                 }
-                else terminateProcess();        
-                /* Andrea: go see my comment on pgmTrapHandler */
-#endif
+                else terminateProcess();
             }
             
         }
