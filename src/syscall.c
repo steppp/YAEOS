@@ -280,7 +280,7 @@ void pgmTrapHandler(){
         *(runningPcb->pgmtrap_old)=  *((state_t*)PGMTRAP_OLDAREA);
         LDST(runningPcb->pgmtrap_new);          
     }
-    else terminateProcess();     
+    else terminateProcess(runningPcb);     
 }
 
 void tlbHandler(){
@@ -294,7 +294,7 @@ void tlbHandler(){
         *(runningPcb->tlb_old)=  *((state_t*)TLB_OLDAREA);
         LDST(runningPcb->tlb_new);          
     }
-    else terminateProcess();     
+    else terminateProcess(runningPcb);     
 }
 
 void sysHandler(){
@@ -322,7 +322,7 @@ void sysHandler(){
             *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
             LDST(runningPcb->sysbk_new);          
         }
-        else terminateProcess(); 
+        else terminateProcess(runningPcb); 
     }
 
     else if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_SYSCALL){
@@ -367,7 +367,7 @@ void sysHandler(){
                     if (succesful==-1) terminateProcess(runningPcb);
                     /* Andrea: minor error, 1 argument missing Igor: Redundant, if terminateProcess doesent get any argument it will default to the runningPbc, I think it would be more elegant this way*/
 #endif
-                    if (succesful==-1) terminateProcess();
+                    if (succesful==-1) terminateProcess(runningPcb);
                     break;
                 case GETTIME:
                     // Retrieves and returns the cpu times putting them in the appropriate return registers */
@@ -413,7 +413,7 @@ void sysHandler(){
                         *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
                         LDST(runningPcb->sysbk_new);          
                     }
-                    else terminateProcess(); 
+                    else terminateProcess(runningPcb); 
                     break;
             }
             /* Restores the processor's state to the the process that called the syscall, eventually with the
@@ -427,7 +427,7 @@ void sysHandler(){
              *      if not, sends it to the corresponding higher level handler, if there isnt one terminates the process
              */
             if(userRegisters->a1 <= 10){
-                runningPcb->CP15_Cause=EXC_RESERVEDINSTR;
+                runningPcb->p_s.CP15_Cause=EXC_RESERVEDINSTR;
                 pgmTrapHandler();
             }
             else{
@@ -435,7 +435,7 @@ void sysHandler(){
                     *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
                     LDST(runningPcb->sysbk_new);          
                 }
-                else terminateProcess();
+                else terminateProcess(runningPcb);
             }
             
         }
