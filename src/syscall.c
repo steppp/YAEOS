@@ -171,12 +171,6 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
  */
 
 void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock) { 
-#if 0
-  user = &(runningPcb->usertime);
-  kernel = &(runningPcb->kerneltime);
-  wallclock = &(runningPcb->wallclocktime);
-/* Andrea: The variables are passed by address to contain the return values */
-#endif 
   *user = runningPcb->usertime;
   *kernel = runningPcb->kerneltime;
   *wallclock = runningPcb->wallclocktime;
@@ -198,8 +192,8 @@ void waitForClock(){
 void getDeviceFromRegister(int * intLine , int * devNo, int * termIO, unsigned int *comm_device_register){
     /* Calculates the base dtpreg_t from the formula  "comm_device_register=devreg+sizeof(unsigned it)" */
     unsigned int devAddrCalculated= (memaddr)comm_device_register - WS;
-    /* Given the addres of the devreg we can calculate both the intline and the devNo from the formula "devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)" 
-     * where baseIntLineSize will be the "0x80" and baseOffset the "0x40", these are both declared to improve readability 
+    /* Given the addres of the devreg we can calculate both the intline and the devNo from the formula "devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)"
+     * where baseIntLineSize will be the "0x80" and baseOffset the "0x40", these are both declared to improve readability
      */
     unsigned int baseIntLineSize=8*DEV_REG_SIZE;
     unsigned int baseOffset=DEV_REG_START;
@@ -219,7 +213,7 @@ void getDeviceFromRegister(int * intLine , int * devNo, int * termIO, unsigned i
     }
 }
 
-/* SYSCALL 8: 
+/* SYSCALL 8:
  *  Activates the I/O operations copying the command in the appropriate command device register
  *  the caller will be suspended and appended to the appropiate semaphore ( using a normalDevice semaphore if the interupt Line is <7 or a terminal semaphone if =7)
  */
@@ -270,31 +264,31 @@ void waitChild() {
 }
 
 void pgmTrapHandler(){
-    /* 
+    /*
      *   Checks if a SYS5 has been called for the current process (The one who triggered the pgmTrap)
      *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
      *      If its not , calls SYS2 to abort the process
      */
-     
+
     if (runningPcb->pgmtrap_new !=NULL){
         *(runningPcb->pgmtrap_old)=  *((state_t*)PGMTRAP_OLDAREA);
-        LDST(runningPcb->pgmtrap_new);          
+        LDST(runningPcb->pgmtrap_new);
     }
-    else terminateProcess(runningPcb);     
+    else terminateProcess(runningPcb);
 }
 
 void tlbHandler(){
-    /* 
+    /*
      *   Checks if a SYS5 has been called for the current process (The one who triggered the tlb)
      *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
      *      If its not , calls SYS2 to abort the process
      */
-     
+
     if (runningPcb->tlb_new !=NULL){
         *(runningPcb->tlb_old)=  *((state_t*)TLB_OLDAREA);
-        LDST(runningPcb->tlb_new);          
+        LDST(runningPcb->tlb_new);
     }
-    else terminateProcess(runningPcb);     
+    else terminateProcess(runningPcb);
 }
 
 void sysHandler(){
@@ -303,7 +297,7 @@ void sysHandler(){
         *   If Breakpoint:
         *       Passes it up to the higer level hander if present, if not declared terminates the pocess
         *   If SYSCALL:
-        *       Checks if the process is running in system(kernel) mode, if positive            
+        *       Checks if the process is running in system(kernel) mode, if positive
         *           Gets the syscall number stored in the a1 register of SYSBK_NEWAREA
         *           According to the number it calls the appropriate function.
         *           If the value is >10 sends it to the corresponding higher level handler, if there isnt one terminates the process
@@ -317,17 +311,17 @@ void sysHandler(){
     /* Checks the cause */
     if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_BREAKPOINT){
         /*Breakpoint, sends it to the higher level handler if present, if not terminates the process*/
-     
+
         if (runningPcb->sysbk_new !=NULL){
             *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
-            LDST(runningPcb->sysbk_new);          
+            LDST(runningPcb->sysbk_new);
         }
-        else terminateProcess(runningPcb); 
+        else terminateProcess(runningPcb);
     }
 
     else if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_SYSCALL){
         /*  SYScall
-         *  Checks if the process is running in system mode 
+         *  Checks if the process is running in system mode
          */
         if (userRegisters->cpsr==STATUS_SYS_MODE){
             /* If yes it handles the syscall selecting which one to call and passing the correct parameters */
@@ -395,14 +389,14 @@ void sysHandler(){
                     getPids((void **)userRegisters->a2, (void **)userRegisters->a3);
                     // Shifts the returned values so the first one is in a1.
                     userRegisters->a1=userRegisters->a2;
-                    userRegisters->a2=userRegisters->a3;            
+                    userRegisters->a2=userRegisters->a3;
                     break;
                 case WAITCHLD:
                     // No arguments necessary, it just calls the appropriate function */
                     waitChild();
                     break;
                 default:
-                    /* 
+                    /*
                         * Syscall >10.
                         *   Checks if a SYS5 has been called for the current process (The one who triggered the SYSCALL)
                         *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
@@ -411,14 +405,14 @@ void sysHandler(){
 
                     if (runningPcb->sysbk_new !=NULL){
                         *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
-                        LDST(runningPcb->sysbk_new);          
+                        LDST(runningPcb->sysbk_new);
                     }
-                    else terminateProcess(runningPcb); 
+                    else terminateProcess(runningPcb);
                     break;
             }
             /* Restores the processor's state to the the process that called the syscall, eventually with the
             a1 register modified to keep the return value */
-            LDST(userRegisters); 
+            LDST(userRegisters);
         }
         else{
             /*  It was not running in kernel mode
@@ -433,11 +427,11 @@ void sysHandler(){
             else{
                 if (runningPcb->sysbk_new !=NULL){
                     *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
-                    LDST(runningPcb->sysbk_new);          
+                    LDST(runningPcb->sysbk_new);
                 }
                 else terminateProcess(runningPcb);
             }
-            
+
         }
     }
 }
