@@ -416,11 +416,8 @@ void sysHandler(){
                     else terminateProcess(); 
                     break;
             }
-            /*
-            Andrea: missing, if a syscall return it's a duty of the OS to restore the
-            processor's state to the one of the process that called the syscall, eventually with the
-            a1 register modified to keep the return value if needed
-             */
+            /* Restores the processor's state to the the process that called the syscall, eventually with the
+            a1 register modified to keep the return value */
             LDST(userRegisters); 
         }
         else{
