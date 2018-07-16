@@ -41,20 +41,27 @@ void initFirstPCB() {
 }
 
 void initVars() {
+
     readyPcbs = 0;
     activePcbs = 0;
     softBlockedPcbs = 0;
 
     runningPcb = NULL;
+    readyQueue = NULL;
 
     int i, j;
 
+    pseudoClockTicks = 0;
+    agingTicks = 0;
+    pseudoClockSem = 0;
+    lastTimerCause = TIMESLICE;
+
     for (i = 0; i < N_INTERRUPT_LINES - 4; i++)
         for (j = 0; j < DEV_PER_INT; j++)
-            normalDevices[i][j] = 1;
+            normalDevices[i][j] = 0;
 
     for (i = 0; i < DEV_PER_INT; i++)
-        terminals[DEV_PER_INT][0] = terminals[DEV_PER_INT][1] = 1;
+        terminals[DEV_PER_INT][0] = terminals[DEV_PER_INT][1] = 0;
 
     clockStartLO = getTODLO();
     clockStartHI = getTODHI();
@@ -83,18 +90,23 @@ void init() {
     // init PHASE1's data structures
     initDataStructures();
 
-    initFirstPCB();
-
     // init nucleus variables
     initVars();
+
+    initFirstPCB();
 }
 
 
 int main() {
     init();
 
+    updateTimer();
     dispatch();
     // end of the nucleus initialization
 
     return 0;
 }
+
+#ifdef DEBUG
+void debug() {}
+#endif // DEBUG

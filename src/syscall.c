@@ -24,6 +24,11 @@ void P(int *semaddr)
     {
         pcb_t *p;   /* holds the former running pcb pointer*/
         p = suspend();
+        p->p_s = *((state_t *) SYSBK_OLDAREA); /*   saving the process' state in its pcb. The P
+                                                    operation is only called in the syscall module by
+                                                    other syscalls, so the process' state is always in
+                                                    SYSBK_OLDAREA
+                                                */
         insertBlocked(semaddr,p);
         dispatch();
     }
@@ -54,12 +59,14 @@ int createProcess(state_t *statep, int priority, void **cpid){
 		*cpid=newproc;
         newproc->waitingOnIO = 0;
         newproc->waitingForChild = 0;
-        activePcbs++;
-        insertProcQ(&readyQueue,newproc);
-        readyPcbs++;
         newproc->usertime = newproc->kerneltime = newproc->wallclocktime = 0;
         newproc->sysbk_new = newproc->sysbk_old = newproc->tlb_new = newproc->tlb_old =
             newproc->pgmtrap_new = newproc->pgmtrap_old = NULL;
+
+        activePcbs++;
+        readyPcbs++;
+        insertProcQ(&readyQueue,newproc);
+
 		return 0;
 	}
 	else{
@@ -72,7 +79,7 @@ int createProcess(state_t *statep, int priority, void **cpid){
 void killProcessSubtree(pcb_t *pcb){
 	if(pcb == runningPcb) runningPcb = NULL;
 	pcb_t *child;
-	while ((child=removeChild(pcb)) !=NULL) killProcessSubtree(child);
+	while ((child=removeChild(pcb)) != NULL) killProcessSubtree(child);
 
     // resume the parent process if it has been suspended using the SYS10
     if (pcb->p_parent->waitingForChild) {       // if the parent is waiting for a child to terminate
@@ -228,13 +235,12 @@ unsigned int ioOperation(unsigned int command, unsigned int *comm_device_registe
 
     int intLine,devNo,termIO;
     getDeviceFromRegister(&intLine ,&devNo, &termIO, comm_device_register);
+    *comm_device_register=command;
     if (intLine<7){
         P(&normalDevices[intLine - INT_LOWEST][devNo]);
-        *comm_device_register=command;
     }
     else if(intLine==7){
         P(&terminals[devNo][termIO]);
-        *comm_device_register=command;
     }
     return 0;
 }
@@ -329,7 +335,7 @@ void sysHandler(){
         /*  SYScall
          *  Checks if the process is running in system mode 
          */
-        if (userRegisters->cpsr==STATUS_SYS_MODE){
+        if (userRegisters->cpsr & STATUS_SYS_MODE){
             /* If yes it handles the syscall selecting which one to call and passing the correct parameters */
             int succesful=5; /* Helper integer that will store if the syscall has ended correctly for those who return something, initialized to an impossible value so the checks cant uncorrectly pass*/
             switch(userRegisters->a1){
@@ -338,7 +344,14 @@ void sysHandler(){
                      *  if it returns error it means that you cant allocate more processes, puts -1 in the return register
                      */
                     //TODO: Visto che tanto cpid è il parametro che devo mettere in a1, e non viene controllato solo scritto, glielo passo direttamente e ci fa quello che vuole, togliere il commento se è giusto , altrimenti bisogna un attimo aggiustarlo
+#if 0
                     succesful=createProcess((state_t *)userRegisters->a2 , (int) userRegisters->a3,(void **) userRegisters->a1);
+#endif // Linea originale
+                    /*
+                    Andrea: Non va bene perche' il pid del processo va salvato nella variabile
+                    passata come argomento in a4
+                     */
+                    succesful=createProcess((state_t *)userRegisters->a2 , (int) userRegisters->a3,(void **) userRegisters->a4);
                     if (succesful==-1) userRegisters->a1=-1;
                     break;
                 case TERMINATEPROCESS:
@@ -380,7 +393,11 @@ void sysHandler(){
                 case IODEVOP:
                     /* a2 should contain the command and a3 should contain the device_command_register the command needs to be put into */
                     succesful=ioOperation((unsigned int) userRegisters->a2, (unsigned int *)userRegisters->a3);
-                    userRegisters->a1=runningPcb->p_s.a1; //TODO: E' Giusto? in a1 mi serve lo status, e nell'interrupt handler me lo mette nel suo p_s.a1
+                    // userRegisters->a1=runningPcb->p_s.a1; //TODO: E' Giusto? in a1 mi serve lo status, e nell'interrupt handler me lo mette nel suo p_s.a1
+                    // Non e' questa system call ad occuparsi della restituzione dello status; in
+                    // piu' in questo modo non funzionerebbe comunque, perche' in userRegister->a1
+                    // ci andrebbe il valore di ritorno dell'operazione di IO (che non sta in
+                    // runningPcb)
                     if (succesful!=0){
                         tprint("Syscall 8 (IO operation) returned an error state, literally impossible (MESSAGE BY KERNEL, NOT P2TEST)");
                         PANIC();
@@ -393,9 +410,6 @@ void sysHandler(){
                         Se ho fatto una cazzata scrivete nel gruppo "igor non programmare dopo che hai bevuto" e capirò
                     */
                     getPids((void **)userRegisters->a2, (void **)userRegisters->a3);
-                    // Shifts the returned values so the first one is in a1.
-                    userRegisters->a1=userRegisters->a2;
-                    userRegisters->a2=userRegisters->a3;            
                     break;
                 case WAITCHLD:
                     // No arguments necessary, it just calls the appropriate function */

@@ -20,8 +20,8 @@ void dispatch()
    */
     if (readyPcbs > 0)
     {
-        pcb_t *tmp = NULL;  /* temp var to store the running pcb*/
-        if (runningPcb != NULL)
+        pcb_t *tmp = NULL;  /* temp var to store the running pcb */
+        if (runningPcb != NULL) /* TODO Never happens, probably gonna remove this */
             tmp = suspend();
         runningPcb = removeProcQ(&readyQueue);
         readyPcbs--;
@@ -30,6 +30,12 @@ void dispatch()
         updateTimer();  /* Load the new timer */
         LDST(&runningPcb->p_s); /* load the new PCB */
     }
+    else
+    {
+        int status = getSTATUS();
+        setSTATUS(STATUS_ALL_INT_ENABLE(status));
+        WAIT(); /* wait for an interrupt */
+    }
 }
 
 pcb_t *suspend()
@@ -37,7 +43,7 @@ pcb_t *suspend()
     if (runningPcb != NULL)
     {
         pcb_t *p;   /* holds the running pcb pointer for return*/
-        runningPcb->p_s = *((state_t *) SYSBK_OLDAREA); /* save the old processor state in the process' pcb */
+        // runningPcb->p_s = *oldarea; /* save the old processor state in the process' pcb */
         runningPcb->p_priority = runningPcb->old_priority; /* restoring its old priority */
         p = runningPcb;
         runningPcb = NULL;

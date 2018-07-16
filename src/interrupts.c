@@ -15,6 +15,10 @@ int terminals[DEV_PER_INT][2];
 int pseudoClockTicks;    /* Number of times the pseudoclock caused an interrupt */
 int agingTicks;  /* Number of times the aging caused an interrupt */
 
+#ifdef DEBUG
+memaddr devreg;
+#endif // DEBUG
+
 void interruptHandler()
 {
     /*
@@ -37,7 +41,7 @@ void interruptHandler()
         for (i = INT_DISK; i <= INT_TERMINAL; i++)
             if (CAUSE_IP_GET(cause,i))
             {
-                int bitmap = CDEV_BITMAP_ADDR(i);
+                int bitmap = *((memaddr*)CDEV_BITMAP_ADDR(i));
                 for (j = 0; j < BYTELEN; j++)
                     if (bitmap & (1 << j))
                         break;
@@ -70,10 +74,10 @@ void interruptHandler()
                 break;
             case INT_TERMINAL:
                 /* I must determine which of the two subdevices generated the interrupt */
-                if (deviceRegister->term.transm_status == DEV_TTRS_S_CHARTRSM) /* Successful
+                if ((deviceRegister->term.transm_status & DEV_TERM_STATUS) == DEV_TTRS_S_CHARTRSM) /* Successful
                                                                                  transmission */
                     which = TRANSM;
-                else if (deviceRegister->term.recv_status == DEV_TRCV_S_CHARRECV) /* Successful
+                else if ((deviceRegister->term.recv_status & DEV_TERM_STATUS) == DEV_TRCV_S_CHARRECV) /* Successful
                                                                                     receipt */
                     which = RECV;
                 else
@@ -92,11 +96,18 @@ void interruptHandler()
                 else if (which == RECV)
                     p->p_s.a1 = deviceRegister->term.recv_status;
                 V(&terminals[j][which]);
-                if (which == TRANSM) /* Returning the status of the device */
+                if (which == TRANSM)
                     deviceRegister->term.transm_command = DEV_C_ACK; /* acknowledging the interrupt */
                 else if (which == RECV)
                     deviceRegister->term.recv_command = DEV_C_ACK; /* acknowledging the interrupt */
                 break;
+        }
+        if (readyPcbs > 0)
+            dispatch();
+        else
+        {
+            ((state_t *)INT_OLDAREA)->pc -= 4; /* Restoring the right return address */
+            LDST((state_t *)INT_OLDAREA);
         }
     }
 }
@@ -118,7 +129,6 @@ int handleTimer()
                 increase the priority of all processes in the ready queue by one
                 updateTimer()
      */
-    cpu_t TOD = getTODLO();
     pcb_t *p;
     switch (lastTimerCause)
     {
@@ -128,17 +138,34 @@ int handleTimer()
                 V(&pseudoClockSem);
             if (runningPcb == NULL)
                 dispatch();
+            else
+            {
+                ((state_t*)INT_OLDAREA)->pc -= 4; /* Restoring the pc to the right return value */
+                LDST((state_t *)INT_OLDAREA);
+            }
             break;
         case TIMESLICE:
-            p = suspend();
+            if (readyPcbs > 0)
+            {
+                p = suspend();
+                p->p_s = *((state_t*)INT_OLDAREA);
+            }
             /* TODO Save the user, kernel and wall clock time in p */
-            updateTimer(TOD);
-            dispatch();
+            updateTimer();
+            if (runningPcb == NULL)
+                dispatch();
+            else
+            {
+                ((state_t*)INT_OLDAREA)->pc -= 4; /* Restoring the pc to the right return value */
+                LDST((state_t*)INT_OLDAREA);
+            }
             break;
         case AGING:
             agingTicks++;
             forallProcQ(readyQueue,increasePriority,NULL);
-            updateTimer(TOD);
+            updateTimer();
+            ((state_t*)INT_OLDAREA)->pc -= 4; /* Restoring the pc to the right return value */
+            LDST((state_t *)INT_OLDAREA);
             break;
     }
 }

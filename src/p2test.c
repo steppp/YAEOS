@@ -4,9 +4,12 @@
 #include <libuarm.h>
 #include <const.h>
 
+#ifdef DEBUG
+#include <main.h>
+int debug2;
+#endif // DEBUG
+
 #define BYTELEN 8
-#define TERMSTATMASK 0xff
-#define TRANSM 5
 
 #define QPAGE 1024              /* size of a stack block. Each process is given one */
 #define QPAGE_1 (QPAGE - 1)
@@ -47,12 +50,15 @@ void print(char *msg) {
 	unsigned int status;
 
 	SYSCALL(SEMP, (memaddr)&term_mutex, 0, 0);
+
 	while (*msg != '\0') {
 		unsigned int command = DEV_TTRS_C_TRSMCHAR | (*msg << BYTELEN);
-		status = SYSCALL(IODEVOP, command, DEV_REG_ADDR(IL_TERMINAL, 0) + 2 * WS,0);
-		if ((status & TERMSTATMASK) != TRANSM)
+		status = SYSCALL(IODEVOP, command, DEV_REG_ADDR(IL_TERMINAL, 0) + 3 * WS,0);
+		if ((status & DEV_TERM_STATUS) != DEV_TTRS_S_CHARTRSM)
+        {
 			PANIC();
-		if ((status >> BYTELEN) != *msg)
+        }
+		if (((status >> BYTELEN) & DEV_TERM_STATUS) != *msg)
 			PANIC();
 		msg++;
 	}
@@ -376,7 +382,10 @@ void test(void) {
 		PANIC();
 	}
 
-	SYSCALL(TERMINATEPROCESS, (memaddr)&p1addr, 0, 0);
+#ifdef DEBUG
+    print("init is gonna kill p1 off\n");
+#endif // DEBUG
+	SYSCALL(TERMINATEPROCESS, (memaddr)p1addr, 0, 0);
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	p1state.pc = (memaddr) p1a;
 	SYSCALL(CREATEPROCESS, (memaddr)&p1state, 10, (memaddr)&p1addr);

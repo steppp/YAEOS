@@ -45,4 +45,9 @@ extern int normalDevices[N_INTERRUPT_LINES - 4][DEV_PER_INT];
  */
 extern int terminals[DEV_PER_INT][2];
 
+#ifdef DEBUG
+extern void debug();
+int status;
+int debug2;
+#endif // DEBUG
 #endif // MAIN_H
