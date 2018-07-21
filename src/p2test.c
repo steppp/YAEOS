@@ -104,9 +104,9 @@ void p2(void) {
     print("p2 is gonna loop\n");
 #endif // DEBUG
 	while ((time2 - time1) < (CLOCKINTERVAL >> 1) )  {
-		time1.time_lo = getTODLO();   /* time of day     */
+		time1 = getTODLO();   /* time of day     */
 		SYSCALL(WAITCLOCK, 0, 0, 0);
-		time2.time_lo = getTODLO();     /* new time of day */
+		time2 = getTODLO();     /* new time of day */
 	}
 	print("p2: WaitBlock Okay\n");
 

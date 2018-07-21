@@ -5,10 +5,7 @@
 typedef int devhdl_t(devreg_t*); /* Type of a function that takes a device register pointer as argument and
                                            returns int, for device handler routines */
 
-typedef struct {
-  unsigned int time_hi;
-  unsigned int time_lo;
-} cpu_t; /* cpu time type */
+typedef unsigned int cpu_t; /* cpu time type */
 
 typedef enum {PSEUDOCLOCK, TIMESLICE, AGING} timcause_t; /* cause of interval timer interrupt type */
 
