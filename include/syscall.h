@@ -18,8 +18,11 @@ int terminateProcess(void * pid);
 /* SYSCALL 3 , calls a P on the semaphore specified in semaddr */
 void P(int *semaddr);
 
-/* SYSCALL 4 , calls a V on the semaphore specified in semaddr */
-void V(int *semaddr);
+/* SYSCALL 4 , calls a V on the semaphore specified in semaddr 
+   Given that the runningProcess may be suspended, its current state is passed an argument to be
+   saved if needed
+ */
+void V(int *semaddr, state_t *to_save);
 
 
 /* SYSCALL 5, specifies what handlers to use, depending by trap.

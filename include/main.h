@@ -25,8 +25,8 @@ extern unsigned int softBlockedPcbs;    /* Number of processes waiting on a I/O 
 extern unsigned int activePcbs;         /* Number of active processes (not waiting on an I/O operation) */
 
 extern timcause_t lastTimerCause;       /* Last timer interrupt's cause */
-extern int pseudoClockTicks;            /* Number of times the pseudoclock caused an interrupt */
-extern int agingTicks;                  /* Number of times the aging caused an interrupt */
+extern unsigned int pseudoClockTicks;            /* Number of times the pseudoclock caused an interrupt */
+extern unsigned int agingTicks;                  /* Number of times the aging caused an interrupt */
 extern cpu_t clockStartLO;                /* TODLO of the moment the inizialization is complete */
 extern cpu_t clockStartHI;                /* TODHI of the moment the inizialization is complete */
 
@@ -48,6 +48,7 @@ extern int terminals[DEV_PER_INT][2];
 #ifdef DEBUG
 extern void debug();
 int status;
+int debug1;
 int debug2;
 #endif // DEBUG
 #endif // MAIN_H

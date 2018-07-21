@@ -3,10 +3,11 @@
 
 #include <uARMtypes.h>
 #include <types.h>
+#include <pcb.h>
 
 /* Timer's Interrupt Service Routine. Intercepts the interrupt, determines the cause, takes the
  * apprioriate action and updates the intervale timer */
-int handleTimer();
+pcb_t *handleTimer();
 
 /* Updates the timer with the minimum between timeSlice interval and pseudoclock deadline */
 void updateTimer();

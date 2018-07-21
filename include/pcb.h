@@ -15,6 +15,7 @@ typedef struct pcb_t {
 	int p_priority;                 /* Current priority */
 	int *p_semKey;                  /* Semaphore the process is blocked on */
     int waitingOnIO;                /* Used to count the number of softblocked processes */
+    int childSem;                   /* Used to wait on a child */
     int waitingForChild;            /* True if the process is waiting for a child to end */
 	//process times
     cpu_t usertime;

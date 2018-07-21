@@ -16,7 +16,7 @@ int debug2;
 
 #define CLOCKINTERVAL   100000UL        /* interval to V clock semaphore */
 #define CLOCKLOOP               10
-#define MINCLOCKLOOP            5000    
+#define MINCLOCKLOOP            3000    
 
 #include <pcb.h>
 #include <asl.h>
@@ -100,6 +100,9 @@ void p2(void) {
 	cpu_t time1, time2;
 	cpu_t usr_t1, kernel_t1, wall_t1;
 	cpu_t usr_t2, kernel_t2, wall_t2, glob_t2;
+#ifdef DEBUG
+    print("p2 is gonna loop\n");
+#endif // DEBUG
 	while ((time2 - time1) < (CLOCKINTERVAL >> 1) )  {
 		time1 = getTODLO();   /* time of day     */
 		SYSCALL(WAITCLOCK, 0, 0, 0);
@@ -386,15 +389,35 @@ void test(void) {
     print("init is gonna kill p1 off\n");
 #endif // DEBUG
 	SYSCALL(TERMINATEPROCESS, (memaddr)p1addr, 0, 0);
+#ifdef DEBUG
+    print("done\n");
+#endif // DEBUG
+#ifdef DEBUG
+    print("init is gonna wait for a child to complete\n");
+#endif // DEBUG
 	SYSCALL(WAITCHLD, 0, 0, 0);
+#ifdef DEBUG
+    print("done\n");
+#endif
 	p1state.pc = (memaddr) p1a;
 	SYSCALL(CREATEPROCESS, (memaddr)&p1state, 10, (memaddr)&p1addr);
 	SYSCALL(SEMP, (memaddr)&p1ok, 0, 0);
 	SYSCALL(SEMV, (memaddr)&p1sem, 0, 0);
 	print("p0: Test of interleaved prints\n");
 	SYSCALL(WAITCHLD, 0, 0, 0);
+#ifdef DEBUG
+    debug2 = 0x41;
+    debug();
+#endif // DEBUG
 
+#ifdef DEBUG
+    debug2 = 0x42;
+    print("init is gonna create p2\n");
+#endif // DEBUG
 	SYSCALL(CREATEPROCESS, (memaddr)&p2state, 10, (memaddr)NULL);
+#ifdef DEBUG
+    print("done\n");
+#endif // DEBUG
 
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	print("p0: p2 ended\n");

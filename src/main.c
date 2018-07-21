@@ -54,7 +54,6 @@ void initVars() {
     pseudoClockTicks = 0;
     agingTicks = 0;
     pseudoClockSem = 0;
-    lastTimerCause = TIMESLICE;
 
     for (i = 0; i < N_INTERRUPT_LINES - 4; i++)
         for (j = 0; j < DEV_PER_INT; j++)
@@ -100,8 +99,7 @@ void init() {
 int main() {
     init();
 
-    updateTimer();
-    dispatch();
+    dispatch(NULL);
     // end of the nucleus initialization
 
     return 0;
@@ -109,4 +107,5 @@ int main() {
 
 #ifdef DEBUG
 void debug() {}
+int debug1;
 #endif // DEBUG
