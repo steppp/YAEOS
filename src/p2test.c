@@ -109,6 +109,10 @@ void p2(void) {
 		time2 = getTODLO();     /* new time of day */
 	}
 	print("p2: WaitBlock Okay\n");
+#ifdef DEBUG
+    debug2 = 0x42;
+    debug();
+#endif // DEBUG
 
 	SYSCALL(GETTIME, (memaddr)&usr_t1, (memaddr)&kernel_t1, (memaddr)&wall_t1);
 	for (i = 0; i < CLOCKLOOP; i++)
@@ -396,19 +400,12 @@ void test(void) {
     print("init is gonna wait for a child to complete\n");
 #endif // DEBUG
 	SYSCALL(WAITCHLD, 0, 0, 0);
-#ifdef DEBUG
-    print("done\n");
-#endif
 	p1state.pc = (memaddr) p1a;
 	SYSCALL(CREATEPROCESS, (memaddr)&p1state, 10, (memaddr)&p1addr);
 	SYSCALL(SEMP, (memaddr)&p1ok, 0, 0);
 	SYSCALL(SEMV, (memaddr)&p1sem, 0, 0);
 	print("p0: Test of interleaved prints\n");
 	SYSCALL(WAITCHLD, 0, 0, 0);
-#ifdef DEBUG
-    debug2 = 0x41;
-    debug();
-#endif // DEBUG
 
 #ifdef DEBUG
     debug2 = 0x42;

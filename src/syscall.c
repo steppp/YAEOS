@@ -113,13 +113,6 @@ void killProcessSubtree(pcb_t *pcb){
  * How to check if it kills the running Process? It uses the global variable runningPcb , setting it to NULL if it kills it
  */
 int terminateProcess(void * pid){
-#ifdef DEBUG
-    if (debug2 = 0x42)
-    {
-        debug1 = 0x41;
-        debug();
-    }
-#endif // DEBUG
 	if(pid==NULL) pid=runningPcb;
 	killProcessSubtree(pid);
 	return 0;
@@ -249,6 +242,8 @@ unsigned int ioOperation(unsigned int command, unsigned int *comm_device_registe
     *comm_device_register=command;
 
     runningPcb->waitingOnIO = 1;
+    activePcbs--;
+    softBlockedPcbs++;
 
     if (intLine<7){
         P(&normalDevices[intLine - INT_LOWEST][devNo]);
@@ -463,7 +458,7 @@ void sysHandler(){
             if (runningPcb != NULL)
                 restoreRunningProcess(userRegisters);
             else
-                dispatch((state_t*)SYSBK_OLDAREA);
+                dispatch(NULL);
         }
         else{
             /*  It was not running in kernel mode
