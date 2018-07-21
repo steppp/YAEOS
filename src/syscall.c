@@ -182,15 +182,20 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
  */
 
 void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock) { 
-#if 0
-  user = &(runningPcb->usertime);
-  kernel = &(runningPcb->kerneltime);
-  wallclock = &(runningPcb->wallclocktime);
-/* Andrea: The variables are passed by address to contain the return values */
-#endif 
-  *user = runningPcb->usertime;
-  *kernel = runningPcb->kerneltime;
-  *wallclock = runningPcb->wallclocktime;
+    cpu_t wallclock_time, wallclock_pcb;
+
+    wallclock_time = (unsigned int)getTODHI();
+    wallclock_time <<= 32;
+    wallclock_time += getTODLO();
+
+    wallclock_pcb = runningPcb->p_s.TOD_Hi;
+    wallclock_pcb <<= 32;
+    wallclock_pcb += runningPcb->p_s.TOD_Low;
+
+    *wallclock = wallclock_time - wallclock_pcb;
+
+    *user = runningPcb->usertime;
+    *kernel = runningPcb->kerneltime;
 }
 
 /* SYSCALL 7: Stops the current running process and adds it to the pseudoClockSem*/
