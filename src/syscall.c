@@ -10,7 +10,6 @@
 #include <main.h>
 #include <types.h>
 #include <interrupts.h>
-#include <stdint.h>
 
 #ifdef DEBUG
 extern int p1p1addr;
