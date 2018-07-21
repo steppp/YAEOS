@@ -9,6 +9,11 @@
 #include <pcbFree.h>
 #include <main.h>
 #include <types.h>
+#include <interrupts.h>
+
+#ifdef DEBUG
+extern int p1p1addr;
+#endif // DEBUG
 
 void P(int *semaddr)
 {
@@ -30,11 +35,10 @@ void P(int *semaddr)
                                                     SYSBK_OLDAREA
                                                 */
         insertBlocked(semaddr,p);
-        dispatch();
     }
 }
 
-void V(int *semaddr)
+void V(int *semaddr,state_t *to_save)
 {
     (*semaddr)++;
     if(*semaddr <= 0)   /* This means that some process was blocked on this semaphore */
@@ -42,10 +46,7 @@ void V(int *semaddr)
         pcb_t *p;   /* holds the unblocked pcb */
         p = removeBlocked(semaddr);
         if (p != NULL)
-        {
-            insertProcQ(&readyQueue,p);
-            readyPcbs++;
-        }
+            insertInReady(p,to_save);
     }
 }
 
@@ -53,10 +54,14 @@ void V(int *semaddr)
 int createProcess(state_t *statep, int priority, void **cpid){
 	pcb_t *newproc= allocPcb();
 	if ( newproc != NULL ){
-		newproc->p_parent=runningPcb;
+        if (runningPcb != NULL)
+            insertChild(runningPcb,newproc);
+        else    /* This happens only for the first process */
+            newproc->p_parent = NULL;
 		newproc->p_s=*statep;
 		newproc->old_priority=newproc->p_priority=priority;
-		*cpid=newproc;
+        if (cpid != NULL) /* If the creating process doesn't need the pid */
+            *cpid=newproc;
         newproc->waitingOnIO = 0;
         newproc->waitingForChild = 0;
         newproc->usertime = newproc->kerneltime = newproc->wallclocktime = 0;
@@ -64,8 +69,7 @@ int createProcess(state_t *statep, int priority, void **cpid){
             newproc->pgmtrap_new = newproc->pgmtrap_old = NULL;
 
         activePcbs++;
-        readyPcbs++;
-        insertProcQ(&readyQueue,newproc);
+        insertInReady(newproc,(state_t*)SYSBK_OLDAREA);
 
 		return 0;
 	}
@@ -83,12 +87,13 @@ void killProcessSubtree(pcb_t *pcb){
 
     // resume the parent process if it has been suspended using the SYS10
     if (pcb->p_parent->waitingForChild) {       // if the parent is waiting for a child to terminate
-        V(pcb->p_parent->p_semKey);             // unblock the parent process
+        V(pcb->p_parent->p_semKey,(state_t*)SYSBK_OLDAREA);             // unblock the parent process
         pcb->p_parent->waitingForChild = 0;     // the parent is no longer waiting for a child to terminate
     }
 
     if (outProcQ(&readyQueue,pcb) != NULL) /* removing it from ready queue*/
         readyPcbs--;
+
     if (pcb->waitingOnIO)   /* Process was blocked on I/O */
         softBlockedPcbs--;
     else
@@ -108,9 +113,15 @@ void killProcessSubtree(pcb_t *pcb){
  * How to check if it kills the running Process? It uses the global variable runningPcb , setting it to NULL if it kills it
  */
 int terminateProcess(void * pid){
+#ifdef DEBUG
+    if (debug2 = 0x42)
+    {
+        debug1 = 0x41;
+        debug();
+    }
+#endif // DEBUG
 	if(pid==NULL) pid=runningPcb;
 	killProcessSubtree(pid);
-	if (runningPcb==NULL) dispatch();
 	return 0;
 }
 
@@ -236,6 +247,9 @@ unsigned int ioOperation(unsigned int command, unsigned int *comm_device_registe
     int intLine,devNo,termIO;
     getDeviceFromRegister(&intLine ,&devNo, &termIO, comm_device_register);
     *comm_device_register=command;
+
+    runningPcb->waitingOnIO = 1;
+
     if (intLine<7){
         P(&normalDevices[intLine - INT_LOWEST][devNo]);
     }
@@ -268,10 +282,20 @@ void getPids(void **pid, void **ppid) {
  * Puts the process in a suspended state waiting for a child to finish its execution
  */
 void waitChild() {
-    int c_sem = 1;  // verificare che questa dichiarazione non possa verificare casi di dangling references
-    runningPcb->waitingForChild = 1;    /* This will be used later to tell wether this process were waiting for a child to end  */
-    P(&c_sem);                          /* Suspend the process */
-
+    if (runningPcb->p_first_child != NULL) /* No need to wait if there are no children */
+    {
+#if 0
+        int c_sem = 1;  // verificare che questa dichiarazione non possa verificare casi di dangling references
+        Andrea: it's a conditional semaphore, not a mutex one; it's initial value is 0
+#endif
+#if 0
+        int c_sem = 0;  // verificare che questa dichiarazione non possa verificare casi di dangling references
+        /* Si', crea dangling reference. Ho aggiunto un campo al pcb */
+#endif
+        runningPcb->childSem = 0;
+        runningPcb->waitingForChild = 1;    /* This will be used later to tell wether this process were waiting for a child to end  */
+        P(&runningPcb->childSem);                          /* Suspend the process */
+    }
     /* perform extra work when the process resumes  */
 }
 
@@ -284,6 +308,7 @@ void pgmTrapHandler(){
      
     if (runningPcb->pgmtrap_new !=NULL){
         *(runningPcb->pgmtrap_old)=  *((state_t*)PGMTRAP_OLDAREA);
+        updateTimer();
         LDST(runningPcb->pgmtrap_new);          
     }
     else terminateProcess(runningPcb);     
@@ -298,6 +323,7 @@ void tlbHandler(){
      
     if (runningPcb->tlb_new !=NULL){
         *(runningPcb->tlb_old)=  *((state_t*)TLB_OLDAREA);
+        updateTimer();
         LDST(runningPcb->tlb_new);          
     }
     else terminateProcess(runningPcb);     
@@ -326,6 +352,7 @@ void sysHandler(){
      
         if (runningPcb->sysbk_new !=NULL){
             *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
+            updateTimer();
             LDST(runningPcb->sysbk_new);          
         }
         else terminateProcess(runningPcb); 
@@ -368,7 +395,7 @@ void sysHandler(){
                     break;
                 case SEMV:
                     /* a2 should contain the physical address of the semaphore to be P’ed */
-                    V((int*)userRegisters->a2);
+                    V((int*)userRegisters->a2,(state_t *)SYSBK_OLDAREA);
                     break;
                 case SPECHDL:
                     /*
@@ -425,6 +452,7 @@ void sysHandler(){
 
                     if (runningPcb->sysbk_new !=NULL){
                         *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
+                        updateTimer();
                         LDST(runningPcb->sysbk_new);          
                     }
                     else terminateProcess(runningPcb); 
@@ -432,7 +460,10 @@ void sysHandler(){
             }
             /* Restores the processor's state to the the process that called the syscall, eventually with the
             a1 register modified to keep the return value */
-            LDST(userRegisters); 
+            if (runningPcb != NULL)
+                restoreRunningProcess(userRegisters);
+            else
+                dispatch((state_t*)SYSBK_OLDAREA);
         }
         else{
             /*  It was not running in kernel mode
@@ -447,11 +478,11 @@ void sysHandler(){
             else{
                 if (runningPcb->sysbk_new !=NULL){
                     *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
+                    updateTimer();
                     LDST(runningPcb->sysbk_new);          
                 }
                 else terminateProcess(runningPcb);
             }
-            
         }
     }
 }

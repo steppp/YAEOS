@@ -12,8 +12,8 @@
 int normalDevices[N_INTERRUPT_LINES - 4][DEV_PER_INT];
 int terminals[DEV_PER_INT][2];
 
-int pseudoClockTicks;    /* Number of times the pseudoclock caused an interrupt */
-int agingTicks;  /* Number of times the aging caused an interrupt */
+unsigned int pseudoClockTicks;    /* Number of times the pseudoclock caused an interrupt */
+unsigned int agingTicks;  /* Number of times the aging caused an interrupt */
 
 #ifdef DEBUG
 memaddr devreg;
@@ -31,13 +31,20 @@ void interruptHandler()
        V on that semaphore
        Ack the interrupt
      */
-    if (CAUSE_IP_GET(getCAUSE(),INT_TIMER))
-        handleTimer();
+    unsigned int cause = ((state_t *) INT_OLDAREA)->CP15_Cause; /* interrupt cause (CP15_Cause) */
+    int flag; /* 0 if the interrupt cause is the timer, 1 otherwise */
+    pcb_t *next;
+    
+    if (CAUSE_IP_GET(cause,INT_TIMER))
+    {
+        flag = 0;
+        next = handleTimer();
+    }
     else
     {
+        flag = 1;
         int i;  /* Contains the interrupt line */
         int j;  /* Contains the interrupt device */
-        unsigned int cause = getCAUSE();    /* interrupt cause (CP15_Cause) */
         for (i = INT_DISK; i <= INT_TERMINAL; i++)
             if (CAUSE_IP_GET(cause,i))
             {
@@ -69,7 +76,8 @@ void interruptHandler()
                     PANIC();
                 }
                 p->p_s.a1 = deviceRegister->dtp.status; /* Returning the status of the device */
-                V(&normalDevices[i-INT_LOWEST][j]);
+                V(&normalDevices[i-INT_LOWEST][j],(state_t *)INT_OLDAREA);
+                p->waitingOnIO = 0;
                 deviceRegister->dtp.command = DEV_C_ACK; /* acknowledging the interrupt */
                 break;
             case INT_TERMINAL:
@@ -95,24 +103,39 @@ void interruptHandler()
                     p->p_s.a1 = deviceRegister->term.transm_status; 
                 else if (which == RECV)
                     p->p_s.a1 = deviceRegister->term.recv_status;
-                V(&terminals[j][which]);
+                V(&terminals[j][which],(state_t*)INT_OLDAREA);
+                p->waitingOnIO = 0;
                 if (which == TRANSM)
                     deviceRegister->term.transm_command = DEV_C_ACK; /* acknowledging the interrupt */
                 else if (which == RECV)
                     deviceRegister->term.recv_command = DEV_C_ACK; /* acknowledging the interrupt */
                 break;
         }
-        if (readyPcbs > 0)
-            dispatch();
+    }
+
+    /* Giving back control to processes */
+
+    if (runningPcb != NULL) /* Some process was running when the interrupt occurred */
+        restoreRunningProcess((state_t*)INT_OLDAREA);
+    else
+    {
+        if (flag)
+            dispatch(NULL);
         else
         {
-            ((state_t *)INT_OLDAREA)->pc -= 4; /* Restoring the right return address */
-            LDST((state_t *)INT_OLDAREA);
+            if (next)
+            {
+                runningPcb = next;
+                updateTimer();
+                LDST(&next->p_s);
+            }
+            else
+                dispatch(NULL);
         }
     }
 }
 
-int handleTimer()
+pcb_t *handleTimer()
 {
     /* 
        get Time of the day and save it in a variable
@@ -129,71 +152,78 @@ int handleTimer()
                 increase the priority of all processes in the ready queue by one
                 updateTimer()
      */
-    pcb_t *p;
+    pcb_t *p = NULL;   /* This is gonna be the next designated process to run. NULL means just
+                          dispatch */
     switch (lastTimerCause)
     {
         case PSEUDOCLOCK:
             pseudoClockTicks++;
             while (pseudoClockSem < 0)
-                V(&pseudoClockSem);
-            if (runningPcb == NULL)
-                dispatch();
-            else
-            {
-                ((state_t*)INT_OLDAREA)->pc -= 4; /* Restoring the pc to the right return value */
-                LDST((state_t *)INT_OLDAREA);
-            }
+                V(&pseudoClockSem,(state_t *)INT_OLDAREA);
             break;
         case TIMESLICE:
             if (readyPcbs > 0)
             {
-                p = suspend();
-                p->p_s = *((state_t*)INT_OLDAREA);
-            }
-            /* TODO Save the user, kernel and wall clock time in p */
-            updateTimer();
-            if (runningPcb == NULL)
-                dispatch();
-            else
-            {
-                ((state_t*)INT_OLDAREA)->pc -= 4; /* Restoring the pc to the right return value */
-                LDST((state_t*)INT_OLDAREA);
+                p = removeProcQ(&readyQueue); 
+                readyPcbs--;
+                insertInReady(runningPcb,(state_t *)INT_OLDAREA);
             }
             break;
         case AGING:
             agingTicks++;
-            forallProcQ(readyQueue,increasePriority,NULL);
-            updateTimer();
-            ((state_t*)INT_OLDAREA)->pc -= 4; /* Restoring the pc to the right return value */
-            LDST((state_t *)INT_OLDAREA);
+            if (readyPcbs > 0)
+                forallProcQ(readyQueue,increasePriority,NULL);
             break;
     }
+
+    return p;
 }
 
 void updateTimer()
 {
-    unsigned int scale = *((unsigned int *) BUS_REG_TIME_SCALE);    /* Needed to conver CPU cycle in
+    unsigned int scale = *((unsigned int *) BUS_REG_TIME_SCALE);    /* Needed to convert CPU cycle into
                                                                      micro seconds */
     int pseudoDeadline, agingDeadline;
-    pseudoDeadline = (clockStartLO + ((pseudoClockTicks + 1)*PSEUDOCLOCKPERIOD)*scale - getTODLO());
+    cpu_t TOD = getTODLO();
+    pseudoDeadline = (int)(clockStartLO + ((pseudoClockTicks + 1)*PSEUDOCLOCKPERIOD)*scale - TOD);
     /* Time remaining until the next pseudoClockTick, in numbers of CPU cycles */
-    if (pseudoDeadline <= TIMESLICEPERIOD*scale)
+    if (pseudoDeadline <= ((int)(TIMESLICEPERIOD*scale)))
     {
         lastTimerCause = PSEUDOCLOCK;   /* The next interrupt will be a pseudoclock interrupt */
-        setTIMER(pseudoDeadline);
+        if (pseudoDeadline > 0) /*  If the deadline has been passed (<0) the timer is not set. This way
+                                    the timer is not acknowledged and the interrupt handler is called
+                                    again, handling the "missed" interrupt and increasing the number
+                                    of ticks so far
+                                 */
+            setTIMER(pseudoDeadline);
     }
     else
     {
-        agingDeadline = (clockStartLO + ((agingTicks + 1)*AGINGPERIOD)*scale - getTODLO());
-        if (agingDeadline <= TIMESLICEPERIOD*scale)
+        agingDeadline = (int)(clockStartLO + ((agingTicks + 1)*AGINGPERIOD)*scale - TOD);
+        if (agingDeadline <= ((int)(TIMESLICEPERIOD*scale)))
         {
             lastTimerCause = AGING;
-            setTIMER(agingDeadline);
+            if (agingDeadline > 0)
+                setTIMER(agingDeadline);
+#ifdef DEBUG
+            else
+            {
+                debug2 = 0x42;
+                debug();
+            }
+#endif // DEBUG
         }
         else
         {
             lastTimerCause = TIMESLICE;
             setTIMER(TIMESLICEPERIOD*scale);
+#ifdef DEBUG
+            if (debug2 == 0x42)
+            {
+                debug1 = 0x42;
+                debug();
+            }
+#endif // DEBUG
         }
     }
 }
