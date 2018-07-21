@@ -16,7 +16,7 @@ int debug2;
 
 #define CLOCKINTERVAL   100000UL        /* interval to V clock semaphore */
 #define CLOCKLOOP               10
-#define MINCLOCKLOOP            3000    
+#define MINCLOCKLOOP            3000
 
 #include <pcb.h>
 #include <asl.h>
@@ -122,12 +122,12 @@ void p2(void) {
 	SYSCALL(GETTIME, (int)&glob_t2, (int)&usr_t2, 0);    /* process time */
 
 	if (((usr_t2 - usr_t1) > MINCLOCKLOOP) || ((usr_t2 + kernel_t2 - usr_t1 - kernel_t1) < MINCLOCKLOOP) ||
-			(usr_t2 + kernel_t2 - usr_t1 - kernel_t1) > (wall_t2 - wall_t1)) 
+			(usr_t2 + kernel_t2 - usr_t1 - kernel_t1) > (wall_t2 - wall_t1))
 		print("error: p2 - CPU time incorrectly maintained\n");
 	else
 		print("p2 - CPU time correctly maintained\n");
 
-	SYSCALL(TERMINATEPROCESS, 0, 0, 0); 
+	SYSCALL(TERMINATEPROCESS, 0, 0, 0);
 	print("P2 survived a terminate process syscall\n");
 	PANIC();
 }
