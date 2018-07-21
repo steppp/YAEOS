@@ -1,4 +1,5 @@
 #include  <pcbFree.h>
+#include <libuarm.h>
 
 void insertFirst(pcb_t *p) {
     if (!p)
@@ -54,6 +55,9 @@ pcb_t *allocPcb() {
     p->tlb_old = NULL;
     p->pgmtrap_new = NULL;
     p->pgmtrap_old = NULL;
+    //defining starting TOD
+    p->p_s.TOD_Hi = getTODHI();
+    p->p_s.TOD_Low = getTODLO();
 
     return p;
 }
