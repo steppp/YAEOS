@@ -69,6 +69,20 @@ int createProcess(state_t *statep, int priority, void **cpid){
             newproc->pgmtrap_new = newproc->pgmtrap_old = NULL;
 
         activePcbs++;
+
+        /* Initializing variables of trap handlers and times */
+        //trap handlers to NULL
+        p->sysbk_new = NULL;
+        p->sysbk_old = NULL;
+        p->tlb_new = NULL;
+        p->tlb_old = NULL;
+        p->pgmtrap_new = NULL;
+        p->pgmtrap_old = NULL;
+        //defining starting wallclocktime
+        p->wallclocktime = getTODHI();
+        p->wallclocktime <<= 32;
+        p->wallclocktime += getTODLO();
+
         insertInReady(newproc,(state_t*)SYSBK_OLDAREA);
 
 		return 0;
