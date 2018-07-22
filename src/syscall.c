@@ -69,6 +69,21 @@ int createProcess(state_t *statep, int priority, void **cpid){
             newproc->pgmtrap_new = newproc->pgmtrap_old = NULL;
 
         activePcbs++;
+
+        /* Initializing variables of trap handlers and times */
+        //trap handlers to NULL
+        p->sysbk_new = NULL;
+        p->sysbk_old = NULL;
+        p->tlb_new = NULL;
+        p->tlb_old = NULL;
+        p->pgmtrap_new = NULL;
+        p->pgmtrap_old = NULL;
+        //defining starting wallclocktime
+        p->wallclocktime = getTODHI();
+        p->wallclocktime <<= 32;
+        p->wallclocktime += getTODLO();
+
+        /* In the end, I put in the ready queue the brand new process */
         insertInReady(newproc,(state_t*)SYSBK_OLDAREA);
 
 		return 0;
@@ -188,11 +203,7 @@ void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
     wallclock_time <<= 32;
     wallclock_time += getTODLO();
 
-    wallclock_pcb = runningPcb->p_s.TOD_Hi;
-    wallclock_pcb <<= 32;
-    wallclock_pcb += runningPcb->p_s.TOD_Low;
-
-    *wallclock = wallclock_time - wallclock_pcb;
+    *wallclock = wallclock_time - runningPcb->wallclocktime;
 
     *user = runningPcb->usertime;
     *kernel = runningPcb->kerneltime;
