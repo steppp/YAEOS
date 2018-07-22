@@ -57,6 +57,7 @@ pcb_t *removeProcQ(pcb_t **head){
 
 		pcb_t *temp=(*head);
 		*head=temp->p_next;
+        temp->p_next = NULL;
 		return temp;
 	}
 }

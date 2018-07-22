@@ -34,6 +34,7 @@ void dispatch(state_t *to_save)
     else
     {
         int status = getSTATUS();
+        updateTimer();
         setSTATUS(STATUS_ALL_INT_ENABLE(status));
         WAIT(); /* wait for an interrupt */
     }

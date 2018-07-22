@@ -78,6 +78,8 @@ void interruptHandler()
                 p->p_s.a1 = deviceRegister->dtp.status; /* Returning the status of the device */
                 V(&normalDevices[i-INT_LOWEST][j],(state_t *)INT_OLDAREA);
                 p->waitingOnIO = 0;
+                softBlockedPcbs--;
+                activePcbs++;
                 deviceRegister->dtp.command = DEV_C_ACK; /* acknowledging the interrupt */
                 break;
             case INT_TERMINAL:
@@ -105,6 +107,8 @@ void interruptHandler()
                     p->p_s.a1 = deviceRegister->term.recv_status;
                 V(&terminals[j][which],(state_t*)INT_OLDAREA);
                 p->waitingOnIO = 0;
+                softBlockedPcbs--;
+                activePcbs++;
                 if (which == TRANSM)
                     deviceRegister->term.transm_command = DEV_C_ACK; /* acknowledging the interrupt */
                 else if (which == RECV)
@@ -119,18 +123,13 @@ void interruptHandler()
         restoreRunningProcess((state_t*)INT_OLDAREA);
     else
     {
-        if (flag)
+        if (flag || next == NULL)
             dispatch(NULL);
         else
         {
-            if (next)
-            {
-                runningPcb = next;
-                updateTimer();
-                LDST(&next->p_s);
-            }
-            else
-                dispatch(NULL);
+            runningPcb = next;
+            updateTimer();
+            LDST(&next->p_s);
         }
     }
 }
@@ -184,8 +183,8 @@ void updateTimer()
     unsigned int scale = *((unsigned int *) BUS_REG_TIME_SCALE);    /* Needed to convert CPU cycle into
                                                                      micro seconds */
     int pseudoDeadline, agingDeadline;
-    cpu_t TOD = getTODLO();
-    pseudoDeadline = (int)(clockStartLO + ((pseudoClockTicks + 1)*PSEUDOCLOCKPERIOD)*scale - TOD);
+    pseudoDeadline = (int)(clockStartLO + ((pseudoClockTicks + 1)*PSEUDOCLOCKPERIOD)*scale -
+            getTODLO());
     /* Time remaining until the next pseudoClockTick, in numbers of CPU cycles */
     if (pseudoDeadline <= ((int)(TIMESLICEPERIOD*scale)))
     {
@@ -199,31 +198,17 @@ void updateTimer()
     }
     else
     {
-        agingDeadline = (int)(clockStartLO + ((agingTicks + 1)*AGINGPERIOD)*scale - TOD);
+        agingDeadline = (int)(clockStartLO + ((agingTicks + 1)*AGINGPERIOD)*scale - getTODLO());
         if (agingDeadline <= ((int)(TIMESLICEPERIOD*scale)))
         {
             lastTimerCause = AGING;
             if (agingDeadline > 0)
                 setTIMER(agingDeadline);
-#ifdef DEBUG
-            else
-            {
-                debug2 = 0x42;
-                debug();
-            }
-#endif // DEBUG
         }
         else
         {
             lastTimerCause = TIMESLICE;
             setTIMER(TIMESLICEPERIOD*scale);
-#ifdef DEBUG
-            if (debug2 == 0x42)
-            {
-                debug1 = 0x42;
-                debug();
-            }
-#endif // DEBUG
         }
     }
 }
