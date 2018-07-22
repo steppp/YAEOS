@@ -83,6 +83,7 @@ int createProcess(state_t *statep, int priority, void **cpid){
         p->wallclocktime <<= 32;
         p->wallclocktime += getTODLO();
 
+        /* In the end, I put in the ready queue the brand new process */
         insertInReady(newproc,(state_t*)SYSBK_OLDAREA);
 
 		return 0;
