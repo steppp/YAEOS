@@ -317,12 +317,14 @@ void pgmTrapHandler(){
      *      If its not , calls SYS2 to abort the process
      */
 
+    pcb_t *processThrowing = runningPcb; /* If runningPcb changes, we keep track of the process who throwed the trap */
     /* Accounting user times when the process has stopped */
     userTimeAccounting(((state_t *) PGMTRAP_OLDAREA)->TOD_Hi, ((state_t *) PGMTRAP_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
     if (runningPcb->pgmtrap_new !=NULL){
         *(runningPcb->pgmtrap_old)=  *((state_t*)PGMTRAP_OLDAREA);
         updateTimer();
+        kernelTimeAccounting(((state_t *) PGMTRAP_OLDAREA)->TOD_Hi, ((state_t *) PGMTRAP_OLDAREA)->TOD_Low, processThrowing); /* Calculating kernel times */
         LDST(runningPcb->pgmtrap_new);          
     }
     else terminateProcess(runningPcb);     
@@ -335,12 +337,15 @@ void tlbHandler(){
      *      If its not , calls SYS2 to abort the process
      */
 
+    pcb_t *processThrowing = runningPcb; /* If runningPcb changes, we keep track of the process who throwed the trap */
+
     /* Accounting user times when the process has stopped */
     userTimeAccounting(((state_t *) TLB_OLDAREA)->TOD_Hi, ((state_t *) TLB_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
     if (runningPcb->tlb_new !=NULL){
         *(runningPcb->tlb_old)=  *((state_t*)TLB_OLDAREA);
         updateTimer();
+        kernelTimeAccounting(((state_t *) TLB_OLDAREA) ->TOD_Hi, ((state_t *) TLB_OLDAREA) ->TOD_Low, processThrowing); /* Calculating kernel times */
         LDST(runningPcb->tlb_new);          
     }
     else terminateProcess(runningPcb);     
@@ -363,6 +368,8 @@ void sysHandler(){
     */
 
     state_t *userRegisters = (state_t*) SYSBK_OLDAREA;
+    pcb_t *processThrowing = runningPcb;
+
     /* Checks the cause */
 #ifdef DEBUG
     if (debug2 == 0x42)
@@ -384,6 +391,7 @@ void sysHandler(){
         if (runningPcb->sysbk_new !=NULL){
             *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
             updateTimer();
+            kernelTimeAccounting(((state_t *) SYSBK_OLDAREA) ->TOD_Hi, ((state_t *) SYSBK_OLDAREA) ->TOD_Low, processThrowing); /* Calculating kernel times */
             LDST(runningPcb->sysbk_new);          
         }
         else terminateProcess(runningPcb); 
@@ -489,6 +497,9 @@ void sysHandler(){
                     else terminateProcess(runningPcb); 
                     break;
             }
+
+            kernelTimeAccounting(((state_t *) SYSBK_OLDAREA) ->TOD_Hi, ((state_t *) SYSBK_OLDAREA) ->TOD_Low, processThrowing); /* Calculating kernel times */
+
             /* Restores the processor's state to the the process that called the syscall, eventually with the
             a1 register modified to keep the return value */
             if (runningPcb != NULL)
@@ -511,6 +522,7 @@ void sysHandler(){
                 if (runningPcb->sysbk_new !=NULL){
                     *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
                     updateTimer();
+                    kernelTimeAccounting(((state_t *) SYSBK_OLDAREA) ->TOD_Hi, ((state_t *) SYSBK_OLDAREA) ->TOD_Low, processThrowing); /* Calculating kernel times */
                     LDST(runningPcb->sysbk_new);          
                 }
                 else terminateProcess(runningPcb);

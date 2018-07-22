@@ -29,7 +29,7 @@ void dispatch(state_t *to_save)
             insertInReady(runningPcb,to_save);
         runningPcb = p;
         updateTimer();  /* Load the new timer */
-
+        freezeLastTime(p); /* Freezing last time  */
         LDST(&runningPcb->p_s); /* load the new PCB */
     }
     else
@@ -93,7 +93,9 @@ void restoreRunningProcess(state_t *oldarea)
 {
     if (oldarea == (state_t *)INT_OLDAREA)
         oldarea->pc -= 4; /* Restoring the right return address*/
+    
     updateTimer();
+    // TODO: freezeLastTime();
     LDST(oldarea);
 }
 
@@ -143,7 +145,7 @@ void userTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low) {
 }
 
 /* Facility for accounting new user time */
-void kenelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* process) {
+void kernelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* process) {
     cpu_t newKernelTime, nowTOD;
 
     /* If no process has ho account time, do nothing*/
@@ -162,6 +164,8 @@ void kenelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* proce
 }
 
 /* TOD of when a process becomes running */
-void freezeLastTime() {
-
+void freezeLastTime(pcb_t *p) {
+    p->lasttime = getTODHI();
+    p->lasttime <<= 32;
+    p->lasttime += getTODLO();
 }

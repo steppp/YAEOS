@@ -115,10 +115,9 @@ void interruptHandler()
                 break;
         }
     }
-
-    kenelTimeAccounting(((state_t *) INT_OLDAREA)->TOD_Hi,
-                         ((state_t *) INT_OLDAREA)->TOD_Low,
-                         p);
+    
+    /* Accounting kernel time for this process */
+    kernelTimeAccounting(((state_t *) INT_OLDAREA)->TOD_Hi, ((state_t *) INT_OLDAREA)->TOD_Low, p);
 
     /* Giving back control to processes */
 
