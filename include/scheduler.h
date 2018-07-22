@@ -35,4 +35,6 @@ void restoreRunningProcess(state_t *oldarea);
  */
 int insertInReady(pcb_t *p, state_t *to_save);
 
+void userTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low);
+
 #endif // SCHEDULER

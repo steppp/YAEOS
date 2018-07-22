@@ -123,17 +123,6 @@ void killProcessSubtree(pcb_t *pcb){
 	freePcb(pcb);
 }
 
-/* Facility for accounting new user time */
-void userTimeAccounting() {
-    cpu_t newUserTime = getTODHI();
-    newUserTime <<= 32;
-    newUserTime += getTODLO();
-
-    newUserTime -= runningPcb->lasttime;
-
-    runningPcb->usertime += newUserTime;
-}
-
 /* SYCALL 2 , kills the process and all its childs
  * What to do if it kills the running Process? It calls dispatch
  * How to check if it kills the running Process? It uses the global variable runningPcb , setting it to NULL if it kills it

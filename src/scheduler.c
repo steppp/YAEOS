@@ -29,6 +29,7 @@ void dispatch(state_t *to_save)
             insertInReady(runningPcb,to_save);
         runningPcb = p;
         updateTimer();  /* Load the new timer */
+
         LDST(&runningPcb->p_s); /* load the new PCB */
     }
     else
@@ -129,4 +130,16 @@ int insertInReady(pcb_t *p, state_t *to_save)
     }
     else
         return -1;
+}
+
+
+/* Facility for accounting new user time */
+void userTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low) {
+    cpu_t newUserTime = TOD_Hi;
+    newUserTime <<= 32;
+    newUserTime += TOD_Low;
+
+    newUserTime -= runningPcb->lasttime;
+
+    runningPcb->usertime += newUserTime;
 }
