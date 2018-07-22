@@ -18,9 +18,10 @@ typedef struct pcb_t {
     int childSem;                   /* Used to wait on a child */
     int waitingForChild;            /* True if the process is waiting for a child to end */
 	//process times
-    cpu_t usertime;
-    cpu_t kerneltime;
-    cpu_t wallclocktime;
+    cpu_t usertime; 				/* Process' time spent in user mode */
+    cpu_t kerneltime;				/* Process' time spent in kernel mode */
+	cpu_t lasttime;					/* Last TOD marker. We use it for keep track of last activation/deactivation */
+    cpu_t wallclocktime;			/* Process' TOD when starting. Used for calculating total wallclocktime  */
 	//trap handlers
 	state_t *sysbk_new;
 	state_t *sysbk_old;
