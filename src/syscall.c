@@ -316,12 +316,9 @@ void pgmTrapHandler(){
      *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
      *      If its not , calls SYS2 to abort the process
      */
-     
-    /* Stopping TOD time right now. For more precision */
-    unsigned int TOD_Low = getTODLO();
-    unsigned int TOD_Hi = getTODHI();
 
-    userTimeAccounting(TOD_Hi, TOD_Low); /* Now I account user time from the last moment I calculated it */ 
+    /* Accounting user times when the process has stopped */
+    userTimeAccounting(((state_t *) PGMTRAP_OLDAREA)->TOD_Hi, ((state_t *) PGMTRAP_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
     if (runningPcb->pgmtrap_new !=NULL){
         *(runningPcb->pgmtrap_old)=  *((state_t*)PGMTRAP_OLDAREA);
@@ -337,13 +334,9 @@ void tlbHandler(){
      *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
      *      If its not , calls SYS2 to abort the process
      */
-     
-    /* Stopping TOD time right now. For more precision */
-    unsigned int TOD_Low = getTODLO();
-    unsigned int TOD_Hi = getTODHI();
 
-    userTimeAccounting(TOD_Hi, TOD_Low); /* Now I account user time from the last moment I calculated it */
-
+    /* Accounting user times when the process has stopped */
+    userTimeAccounting(((state_t *) TLB_OLDAREA)->TOD_Hi, ((state_t *) TLB_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
     if (runningPcb->tlb_new !=NULL){
         *(runningPcb->tlb_old)=  *((state_t*)TLB_OLDAREA);
@@ -369,10 +362,6 @@ void sysHandler(){
         *               if not, sends it to the corresponding higher level handler, if there isnt one terminates the process
     */
 
-    /* Stopping TOD time right now. For more precision */
-    unsigned int TOD_Low = getTODLO();
-    unsigned int TOD_Hi = getTODHI();
-
     state_t *userRegisters = (state_t*) SYSBK_OLDAREA;
     /* Checks the cause */
 #ifdef DEBUG
@@ -386,7 +375,8 @@ void sysHandler(){
     }
 #endif // DEBUG
 
-    userTimeAccounting(TOD_Hi, TOD_Low); /* Now I account user time from the last moment I calculated it */
+    /* Accounting user times when the process has stopped */
+    userTimeAccounting(((state_t *) SYSBK_OLDAREA)->TOD_Hi, ((state_t *) SYSBK_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
     if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_BREAKPOINT){
         /*Breakpoint, sends it to the higher level handler if present, if not terminates the process*/
