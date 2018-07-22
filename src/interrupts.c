@@ -32,9 +32,16 @@ void interruptHandler()
            Ack the interrupt
         Give control back to a process
      */
+
+    /* Stopping TOD time right now. For more precision */
+    unsigned int TOD_Low = getTODLO();
+    unsigned int TOD_Hi = getTODHI();
+
     unsigned int cause = ((state_t *) INT_OLDAREA)->CP15_Cause; /* interrupt cause (CP15_Cause) */
     int dispatchFlag = 0; /* 1 if the interrupt cause was the timer and a dispatch is necessary, 0 otherwise */
-    
+
+    userTimeAccounting(TOD_Hi, TOD_Low); /* Now I account user time from the last moment I calculated it */
+
     if (CAUSE_IP_GET(cause,INT_TIMER))
         dispatchFlag = handleTimer();
     else
