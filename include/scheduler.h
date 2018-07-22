@@ -37,4 +37,8 @@ int insertInReady(pcb_t *p, state_t *to_save);
 
 void userTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low);
 
+void kenelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* process);
+
+void freezeLastTime();
+
 #endif // SCHEDULER

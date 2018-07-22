@@ -35,6 +35,7 @@ void interruptHandler()
 
     unsigned int cause = ((state_t *) INT_OLDAREA)->CP15_Cause; /* interrupt cause (CP15_Cause) */
     int dispatchFlag = 0; /* 1 if the interrupt cause was the timer and a dispatch is necessary, 0 otherwise */
+    pcb_t *p = NULL;
 
     userTimeAccounting(( (state_t *) INT_OLDAREA)->TOD_Hi, ( (state_t *) INT_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
@@ -54,7 +55,6 @@ void interruptHandler()
                 break;
             }
         devreg_t *deviceRegister = (devreg_t *)DEV_REG_ADDR(i,j);
-        pcb_t *p;   /* first blocked process on the semaphore */
         int which = -1; /* If the interrupt was from a terminal, this discriminates between
                            transimmsion and receipt */
         switch(i)
@@ -115,6 +115,10 @@ void interruptHandler()
                 break;
         }
     }
+
+    kenelTimeAccounting(((state_t *) INT_OLDAREA)->TOD_Hi,
+                         ((state_t *) INT_OLDAREA)->TOD_Low,
+                         p);
 
     /* Giving back control to processes */
 

@@ -139,6 +139,29 @@ void userTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low) {
     newUserTime += TOD_Low;
 
     newUserTime -= runningPcb->lasttime;
-
     runningPcb->usertime += newUserTime;
+}
+
+/* Facility for accounting new user time */
+void kenelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* process) {
+    cpu_t newKernelTime, nowTOD;
+
+    /* If no process has ho account time, do nothing*/
+    if (process == NULL) return;
+
+    newKernelTime = TOD_Hi;
+    newKernelTime <<= 32;
+    newKernelTime += TOD_Low;
+
+    nowTOD = getTODHI();
+    nowTOD <<= 32;
+    nowTOD += getTODLO();
+
+    nowTOD -= newKernelTime;
+    runningPcb->kerneltime += nowTOD;
+}
+
+/* TOD of when a process becomes running */
+void freezeLastTime() {
+
 }
