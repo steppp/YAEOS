@@ -7,7 +7,7 @@
 
 /* Timer's Interrupt Service Routine. Intercepts the interrupt, determines the cause, takes the
  * apprioriate action and updates the intervale timer */
-pcb_t *handleTimer();
+int handleTimer();
 
 /* Updates the timer with the minimum between timeSlice interval and pseudoclock deadline */
 void updateTimer();

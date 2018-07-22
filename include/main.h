@@ -13,6 +13,8 @@
 #define TRANSM 1    /* terminal related */
 #define RECV 0
 
+#define GET_STATUS_MODE(mode) ((mode) & 0x1F)
+
 // ready processes list
 extern pcb_t *readyQueue;
 // Current running process

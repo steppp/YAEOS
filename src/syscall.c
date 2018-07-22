@@ -130,7 +130,7 @@ int terminateProcess(void * pid){
 */
 int specifyTrapHandler(int type, state_t *old, state_t *new) {
   switch (type) {
-    case 0:
+    case SPECSYSBP:
         //if currentProcess' areas are clean
         if (runningPcb->sysbk_new == NULL && runningPcb->sysbk_old == NULL) {
             //set areas
@@ -143,7 +143,7 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
         }
         break;
 
-    case 1:
+    case SPECTLB:
         //if currentProcess' areas are clean
         if (runningPcb->tlb_new == NULL && runningPcb->tlb_old == NULL) {
             //set areas
@@ -156,7 +156,7 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
         }
         break;
 
-    case 2:
+    case SPECPGMT:
         //if currentProcess' areas are clean
         if (runningPcb->pgmtrap_new == NULL && runningPcb->pgmtrap_old == NULL) {
             //set areas
@@ -347,6 +347,16 @@ void sysHandler(){
 
     state_t *userRegisters = (state_t*) SYSBK_OLDAREA;
     /* Checks the cause */
+#ifdef DEBUG
+    if (debug2 == 0x42)
+    {
+        debug1 = (userRegisters)->cpsr & STATUS_SYS_MODE;
+        debug2 = CAUSE_EXCCODE_GET((userRegisters)->CP15_Cause);
+        debug();
+        debug1 = (userRegisters)->a1;
+        debug();
+    }
+#endif // DEBUG
     if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_BREAKPOINT){
         /*Breakpoint, sends it to the higher level handler if present, if not terminates the process*/
      
@@ -362,7 +372,7 @@ void sysHandler(){
         /*  SYScall
          *  Checks if the process is running in system mode 
          */
-        if (userRegisters->cpsr & STATUS_SYS_MODE){
+        if (GET_STATUS_MODE(userRegisters->cpsr) == STATUS_SYS_MODE){
             /* If yes it handles the syscall selecting which one to call and passing the correct parameters */
             int succesful=5; /* Helper integer that will store if the syscall has ended correctly for those who return something, initialized to an impossible value so the checks cant uncorrectly pass*/
             switch(userRegisters->a1){
@@ -390,11 +400,11 @@ void sysHandler(){
                     }
                     break;
                 case SEMP:
-                    /* a2 should contain the physical address of the semaphore to be V’ed */
+                    /* a2 should contain the physical address of the semaphore to be P’ed */
                     P((int*) userRegisters->a2);
                     break;
                 case SEMV:
-                    /* a2 should contain the physical address of the semaphore to be P’ed */
+                    /* a2 should contain the physical address of the semaphore to be V’ed */
                     V((int*)userRegisters->a2,(state_t *)SYSBK_OLDAREA);
                     break;
                 case SPECHDL:
@@ -411,7 +421,7 @@ void sysHandler(){
                     break;
                 case GETTIME:
                     // Retrieves and returns the cpu times putting them in the appropriate return registers */
-                    getTimes((cpu_t *)userRegisters->a1, (cpu_t *)userRegisters->a2, (cpu_t *)userRegisters->a3);
+                    getTimes((cpu_t *)userRegisters->a2, (cpu_t *)userRegisters->a3, (cpu_t *)userRegisters->a4);
                     break;
                 case WAITCLOCK:
                     /* No arguments necessary, it just calls the appropriate function */
@@ -422,7 +432,7 @@ void sysHandler(){
                     succesful=ioOperation((unsigned int) userRegisters->a2, (unsigned int *)userRegisters->a3);
                     // userRegisters->a1=runningPcb->p_s.a1; //TODO: E' Giusto? in a1 mi serve lo status, e nell'interrupt handler me lo mette nel suo p_s.a1
                     // Non e' questa system call ad occuparsi della restituzione dello status; in
-                    // piu' in questo modo non funzionerebbe comunque, perche' in userRegister->a1
+                    // piu' in questo modo non funzionerebbe comunque, perche' in userRegisters->a1
                     // ci andrebbe il valore di ritorno dell'operazione di IO (che non sta in
                     // runningPcb)
                     if (succesful!=0){
@@ -472,7 +482,8 @@ void sysHandler(){
              *      if not, sends it to the corresponding higher level handler, if there isnt one terminates the process
              */
             if(userRegisters->a1 <= 10){
-                runningPcb->p_s.CP15_Cause=EXC_RESERVEDINSTR;
+                userRegisters->CP15_Cause = EXC_RESERVEDINSTR;
+                *((state_t*)PGMTRAP_OLDAREA) = *userRegisters;
                 pgmTrapHandler();
             }
             else{

@@ -109,12 +109,12 @@ void p2(void) {
 		time2 = getTODLO();     /* new time of day */
 	}
 	print("p2: WaitBlock Okay\n");
+
+	SYSCALL(GETTIME, (memaddr)&usr_t1, (memaddr)&kernel_t1, (memaddr)&wall_t1);
 #ifdef DEBUG
     debug2 = 0x42;
     debug();
 #endif // DEBUG
-
-	SYSCALL(GETTIME, (memaddr)&usr_t1, (memaddr)&kernel_t1, (memaddr)&wall_t1);
 	for (i = 0; i < CLOCKLOOP; i++)
 		SYSCALL(WAITCLOCK, 0, 0, 0);
 	SYSCALL(GETTIME, (memaddr)&usr_t2, (memaddr)&kernel_t2, (memaddr)&wall_t2);
@@ -143,7 +143,7 @@ void p3(void) {
 	}
 	SYSCALL(SEMV, (memaddr)&synp3, 0, 0);
 	SYSCALL(SEMP, (memaddr)&blkp3, 0, 0);
-	SYSCALL(SEMP, (memaddr)&synp3, 0, 0);
+	//SYSCALL(SEMP, (memaddr)&synp3, 0, 0);
 
 	if (p3inc > 2) {
 		print("error: second incarnation of p3 did not terminate\n");
@@ -155,7 +155,7 @@ void p3(void) {
 
 	SYSCALL(SEMP, (memaddr)&synp3, 0, 0);
 
-	SYSCALL(SEMP, (memaddr)&endp3, 0, 0);
+	//SYSCALL(SEMP, (memaddr)&endp3, 0, 0);
 	SYSCALL(TERMINATEPROCESS, 0, 0, 0);
 	print("P3 survived a terminate process syscall\n");
 	PANIC();

@@ -24,25 +24,21 @@ void interruptHandler()
     /*
        Understand from which line the interrupt came from
        if line == IL_TIMER
-       call the timer handler routine
+           call the timer handler routine
        else
-       find the appropriate device register
-       find the appropriate device semaphore
-       V on that semaphore
-       Ack the interrupt
+           find the appropriate device register
+           find the appropriate device semaphore
+           V on that semaphore
+           Ack the interrupt
+        Give control back to a process
      */
     unsigned int cause = ((state_t *) INT_OLDAREA)->CP15_Cause; /* interrupt cause (CP15_Cause) */
-    int flag; /* 0 if the interrupt cause is the timer, 1 otherwise */
-    pcb_t *next;
+    int dispatchFlag = 0; /* 1 if the interrupt cause was the timer and a dispatch is necessary, 0 otherwise */
     
     if (CAUSE_IP_GET(cause,INT_TIMER))
-    {
-        flag = 0;
-        next = handleTimer();
-    }
+        dispatchFlag = handleTimer();
     else
     {
-        flag = 1;
         int i;  /* Contains the interrupt line */
         int j;  /* Contains the interrupt device */
         for (i = INT_DISK; i <= INT_TERMINAL; i++)
@@ -119,22 +115,15 @@ void interruptHandler()
 
     /* Giving back control to processes */
 
-    if (runningPcb != NULL) /* Some process was running when the interrupt occurred */
+    if (dispatchFlag)
+        dispatch((state_t*)INT_OLDAREA);
+    else if (runningPcb != NULL) /* Some process was running when the interrupt occurred */
         restoreRunningProcess((state_t*)INT_OLDAREA);
     else
-    {
-        if (flag || next == NULL)
-            dispatch(NULL);
-        else
-        {
-            runningPcb = next;
-            updateTimer();
-            LDST(&next->p_s);
-        }
-    }
+        dispatch(NULL);
 }
 
-pcb_t *handleTimer()
+int handleTimer()
 {
     /* 
        get Time of the day and save it in a variable
@@ -151,8 +140,7 @@ pcb_t *handleTimer()
                 increase the priority of all processes in the ready queue by one
                 updateTimer()
      */
-    pcb_t *p = NULL;   /* This is gonna be the next designated process to run. NULL means just
-                          dispatch */
+    int ret = 0;
     switch (lastTimerCause)
     {
         case PSEUDOCLOCK:
@@ -162,11 +150,7 @@ pcb_t *handleTimer()
             break;
         case TIMESLICE:
             if (readyPcbs > 0)
-            {
-                p = removeProcQ(&readyQueue); 
-                readyPcbs--;
-                insertInReady(runningPcb,(state_t *)INT_OLDAREA);
-            }
+                ret = 1;
             break;
         case AGING:
             agingTicks++;
@@ -175,7 +159,7 @@ pcb_t *handleTimer()
             break;
     }
 
-    return p;
+    return ret;
 }
 
 void updateTimer()
