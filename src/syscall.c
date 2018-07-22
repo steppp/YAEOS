@@ -195,11 +195,7 @@ void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
     wallclock_time <<= 32;
     wallclock_time += getTODLO();
 
-    wallclock_pcb = runningPcb->p_s.TOD_Hi;
-    wallclock_pcb <<= 32;
-    wallclock_pcb += runningPcb->p_s.TOD_Low;
-
-    *wallclock = wallclock_time - wallclock_pcb;
+    *wallclock = wallclock_time - runningPcb->wallclocktime;
 
     *user = runningPcb->usertime;
     *kernel = runningPcb->kerneltime;

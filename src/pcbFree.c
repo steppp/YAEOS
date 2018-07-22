@@ -59,5 +59,9 @@ pcb_t *allocPcb() {
     p->p_s.TOD_Hi = getTODHI();
     p->p_s.TOD_Low = getTODLO();
 
+    p->wallclocktime = getTODHI();
+    p->wallclocktime <<= 32;
+    p->wallclocktime += getTODLO();
+
     return p;
 }
