@@ -95,7 +95,7 @@ void restoreRunningProcess(state_t *oldarea)
         oldarea->pc -= 4; /* Restoring the right return address*/
     
     updateTimer();
-    // TODO: freezeLastTime();
+    freezeLastTime(runningPcb);
     LDST(oldarea);
 }
 
