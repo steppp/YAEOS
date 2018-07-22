@@ -35,10 +35,30 @@ void restoreRunningProcess(state_t *oldarea);
  */
 int insertInReady(pcb_t *p, state_t *to_save);
 
+
+/*
+    This facility updates the time spent for the current running process in user mode.
+    Substract the time gave from parameters (Hi and Low part of TOD)
+    to the last time marked (with freezeLastTime) in the process, 
+    and then adds it to the total user time.
+*/
 void userTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low);
 
+/*
+    This facility updates the time spent for the argument-passed process in kernel mode.
+    Substract the time gave from parameters (Hi and Low part of TOD)
+    to the current TOD
+    and then adds it to the total kernel time.
+
+    If the process passed by argument is NULL nothing is updated.
+*/
 void kernelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* process);
 
+
+/*
+    This facility freezes the lasttime variable to the current TOD.
+    It is useful for calculating the user time.
+*/
 void freezeLastTime(pcb_t *p);
 
 #endif // SCHEDULER

@@ -29,7 +29,7 @@ void dispatch(state_t *to_save)
             insertInReady(runningPcb,to_save);
         runningPcb = p;
         updateTimer();  /* Load the new timer */
-        freezeLastTime(p); /* Freezing last time  */
+        freezeLastTime(p); /* Freezing the lasttime in pcb for calculating next user time */
         LDST(&runningPcb->p_s); /* load the new PCB */
     }
     else
@@ -95,7 +95,7 @@ void restoreRunningProcess(state_t *oldarea)
         oldarea->pc -= 4; /* Restoring the right return address*/
     
     updateTimer();
-    freezeLastTime(runningPcb);
+    freezeLastTime(runningPcb); /* Freezing the lasttime in pcb for calculating next user time */
     LDST(oldarea);
 }
 
@@ -136,12 +136,13 @@ int insertInReady(pcb_t *p, state_t *to_save)
 
 /* Facility for accounting new user time */
 void userTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low) {
-    cpu_t newUserTime = TOD_Hi;
-    newUserTime <<= 32;
-    newUserTime += TOD_Low;
+    /* Now creating cpu_t time having High and Low part of the number */
+    cpu_t newUserTime = TOD_Hi; /* Assigning the Hi part at the variable... */
+    newUserTime <<= 32; /* ..shifting in the Hi part of the number... */
+    newUserTime += TOD_Low; /* ...and sum the lower part */
 
-    newUserTime -= runningPcb->lasttime;
-    runningPcb->usertime += newUserTime;
+    newUserTime -= runningPcb->lasttime; /* Substract the time calculated to the last time marked */
+    runningPcb->usertime += newUserTime; /* Sum the slice of time to the total user time of process  */
 }
 
 /* Facility for accounting new user time */
@@ -151,21 +152,25 @@ void kernelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* proc
     /* If no process has ho account time, do nothing*/
     if (process == NULL) return;
 
-    newKernelTime = TOD_Hi;
-    newKernelTime <<= 32;
-    newKernelTime += TOD_Low;
+    /* Now creating cpu_t time having High and Low part of the number */
+    newKernelTime = TOD_Hi; /* Assigning the Hi part at the variable... */
+    newKernelTime <<= 32; /* ..shifting in the Hi part of the number... */
+    newKernelTime += TOD_Low; /* ...and sum the lower part */
 
+    /* Doing the same stuff, but using current TOD */
     nowTOD = getTODHI();
     nowTOD <<= 32;
     nowTOD += getTODLO();
 
-    nowTOD -= newKernelTime;
-    runningPcb->kerneltime += nowTOD;
+    nowTOD -= newKernelTime; /* Substract the TOD to the kernel time calculated  */
+    runningPcb->kerneltime += nowTOD; /* Sum the slice of time to the total kernel time */
 }
 
 /* TOD of when a process becomes running */
 void freezeLastTime(pcb_t *p) {
-    p->lasttime = getTODHI();
-    p->lasttime <<= 32;
-    p->lasttime += getTODLO();
+    /* Now creating cpu_t time having High and Low part of the number.
+       Save it to pcb's lasttime. */
+    p->lasttime = getTODHI(); /* Assigning the Hi part at the variable... */
+    p->lasttime <<= 32; /* ..shifting in the Hi part of the number... */
+    p->lasttime += getTODLO(); /* ...and sum the lower part */
 }
