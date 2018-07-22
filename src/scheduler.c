@@ -132,7 +132,6 @@ int insertInReady(pcb_t *p, state_t *to_save)
         return -1;
 }
 
-
 /* Facility for accounting new user time */
 void userTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low) {
     cpu_t newUserTime = TOD_Hi;
