@@ -55,10 +55,7 @@ pcb_t *allocPcb() {
     p->tlb_old = NULL;
     p->pgmtrap_new = NULL;
     p->pgmtrap_old = NULL;
-    //defining starting TOD
-    p->p_s.TOD_Hi = getTODHI();
-    p->p_s.TOD_Low = getTODLO();
-
+    //defining starting wallclocktime
     p->wallclocktime = getTODHI();
     p->wallclocktime <<= 32;
     p->wallclocktime += getTODLO();
