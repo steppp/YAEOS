@@ -326,7 +326,10 @@ void pgmTrapHandler(){
     userTimeAccounting(((state_t *) PGMTRAP_OLDAREA)->TOD_Hi, ((state_t *) PGMTRAP_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
     if (!passup((state_t*)PGMTRAP_OLDAREA))
+    {
         terminateProcess(runningPcb);
+        dispatch(NULL);
+    }
 }
 
 void tlbHandler(){
@@ -340,7 +343,10 @@ void tlbHandler(){
     userTimeAccounting(((state_t *) TLB_OLDAREA)->TOD_Hi, ((state_t *) TLB_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
     if (!passup((state_t *)TLB_OLDAREA))
+    {
         terminateProcess(runningPcb);
+        dispatch(NULL);
+    }
 }
 
 void sysHandler(){
@@ -369,7 +375,10 @@ void sysHandler(){
     if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_BREAKPOINT){
         /*Breakpoint, sends it to the higher level handler if present, if not terminates the process*/
         if (!passup((state_t*)SYSBK_OLDAREA))
+        {
             terminateProcess(runningPcb); 
+            dispatch(NULL);
+        }
     }
 
     else if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_SYSCALL){
@@ -464,7 +473,10 @@ void sysHandler(){
                         *       If its not , calls SYS2 to abort the process
                     */
                     if (!passup((state_t*)SYSBK_OLDAREA))
+                    {
                         terminateProcess(runningPcb);
+                        dispatch(NULL);
+                    }
                     break;
             }
 
@@ -487,11 +499,17 @@ void sysHandler(){
                 userRegisters->CP15_Cause = EXC_RESERVEDINSTR;
                 *((state_t*)PGMTRAP_OLDAREA) = *userRegisters;
                 if (!passup((state_t *)PGMTRAP_OLDAREA))
+                {
                     terminateProcess(runningPcb);
+                    dispatch(NULL);
+                }
             }
             else{
                     if (!passup((state_t*)SYSBK_OLDAREA))
+                    {
                         terminateProcess(runningPcb);
+                        dispatch(NULL);
+                    }
             }
         }
     }
