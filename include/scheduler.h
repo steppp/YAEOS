@@ -61,4 +61,11 @@ void kernelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* proc
 */
 void freezeLastTime(pcb_t *p);
 
+/*
+    Handles the passup of a sysbk/tlb/pgmtrap. The argument is the old area where the state of the
+    running process has been saved. Returns 0 if the passup can't be done (runningPcb == NULL or
+    SYS5 not previously called), doesn't return and realizes the passup otherwise
+ */
+int passup(state_t *old_to_save);
+
 #endif // SCHEDULER

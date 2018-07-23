@@ -111,15 +111,11 @@ void p2(void) {
 	print("p2: WaitBlock Okay\n");
 
 	SYSCALL(GETTIME, (memaddr)&usr_t1, (memaddr)&kernel_t1, (memaddr)&wall_t1);
-#ifdef DEBUG
-    debug2 = 0x42;
-    debug();
-#endif // DEBUG
 	for (i = 0; i < CLOCKLOOP; i++)
 		SYSCALL(WAITCLOCK, 0, 0, 0);
 	SYSCALL(GETTIME, (memaddr)&usr_t2, (memaddr)&kernel_t2, (memaddr)&wall_t2);
 
-	SYSCALL(GETTIME, (int)&glob_t2, (int)&usr_t2, 0);    /* process time */
+	//SYSCALL(GETTIME, (int)&glob_t2, (int)&usr_t2, 0);    /* process time */
 
 	if (((usr_t2 - usr_t1) > MINCLOCKLOOP) || ((usr_t2 + kernel_t2 - usr_t1 - kernel_t1) < MINCLOCKLOOP) ||
 			(usr_t2 + kernel_t2 - usr_t1 - kernel_t1) > (wall_t2 - wall_t1))
@@ -429,7 +425,7 @@ void test(void) {
 	SYSCALL(WAITCHLD, 0, 0, 0);
 
 	if (p5p6race != 5) {
-		print("Wrong managemnt of process priority\n");
+		print("Wrong management of process priority\n");
 		PANIC();
 	}
 

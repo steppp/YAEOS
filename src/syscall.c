@@ -199,14 +199,19 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
 void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock) { 
     cpu_t wallclock_time, wallclock_pcb;
 
-    wallclock_time = (unsigned int)getTODHI();
-    wallclock_time <<= 32;
-    wallclock_time += getTODLO();
+    if (wallclock)
+    {
+        wallclock_time = (unsigned int)getTODHI();
+        wallclock_time <<= 32;
+        wallclock_time += getTODLO();
 
-    *wallclock = wallclock_time - runningPcb->wallclocktime;
+        *wallclock = wallclock_time - runningPcb->wallclocktime;
+    }
 
-    *user = runningPcb->usertime;
-    *kernel = runningPcb->kerneltime;
+    if (user)
+        *user = runningPcb->usertime;
+    if (kernel)
+        *kernel = runningPcb->kerneltime;
 }
 
 /* SYSCALL 7: Stops the current running process and adds it to the pseudoClockSem*/
@@ -317,17 +322,11 @@ void pgmTrapHandler(){
      *      If its not , calls SYS2 to abort the process
      */
 
-    pcb_t *processThrowing = runningPcb; /* If runningPcb changes, we keep track of the process who throwed the trap */
     /* Accounting user times when the process has stopped */
     userTimeAccounting(((state_t *) PGMTRAP_OLDAREA)->TOD_Hi, ((state_t *) PGMTRAP_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
-    if (runningPcb->pgmtrap_new !=NULL){
-        *(runningPcb->pgmtrap_old)=  *((state_t*)PGMTRAP_OLDAREA);
-        updateTimer();
-        kernelTimeAccounting(((state_t *) PGMTRAP_OLDAREA)->TOD_Hi, ((state_t *) PGMTRAP_OLDAREA)->TOD_Low, processThrowing); /* Calculating kernel times */
-        LDST(runningPcb->pgmtrap_new);          
-    }
-    else terminateProcess(runningPcb);     
+    if (!passup((state_t*)PGMTRAP_OLDAREA))
+        terminateProcess(runningPcb);
 }
 
 void tlbHandler(){
@@ -337,18 +336,11 @@ void tlbHandler(){
      *      If its not , calls SYS2 to abort the process
      */
 
-    pcb_t *processThrowing = runningPcb; /* If runningPcb changes, we keep track of the process who throwed the trap */
-
     /* Accounting user times when the process has stopped */
     userTimeAccounting(((state_t *) TLB_OLDAREA)->TOD_Hi, ((state_t *) TLB_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
-    if (runningPcb->tlb_new !=NULL){
-        *(runningPcb->tlb_old)=  *((state_t*)TLB_OLDAREA);
-        updateTimer();
-        kernelTimeAccounting(((state_t *) TLB_OLDAREA) ->TOD_Hi, ((state_t *) TLB_OLDAREA) ->TOD_Low, processThrowing); /* Calculating kernel times */
-        LDST(runningPcb->tlb_new);          
-    }
-    else terminateProcess(runningPcb);     
+    if (!passup((state_t *)TLB_OLDAREA))
+        terminateProcess(runningPcb);
 }
 
 void sysHandler(){
@@ -370,31 +362,14 @@ void sysHandler(){
     state_t *userRegisters = (state_t*) SYSBK_OLDAREA;
     pcb_t *processThrowing = runningPcb;
 
-    /* Checks the cause */
-#ifdef DEBUG
-    if (debug2 == 0x42)
-    {
-        debug1 = (userRegisters)->cpsr & STATUS_SYS_MODE;
-        debug2 = CAUSE_EXCCODE_GET((userRegisters)->CP15_Cause);
-        debug();
-        debug1 = (userRegisters)->a1;
-        debug();
-    }
-#endif // DEBUG
-
     /* Accounting user times when the process has stopped */
     userTimeAccounting(((state_t *) SYSBK_OLDAREA)->TOD_Hi, ((state_t *) SYSBK_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
+    /* Checks the cause */
     if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_BREAKPOINT){
         /*Breakpoint, sends it to the higher level handler if present, if not terminates the process*/
-     
-        if (runningPcb->sysbk_new !=NULL){
-            *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
-            updateTimer();
-            kernelTimeAccounting(((state_t *) SYSBK_OLDAREA) ->TOD_Hi, ((state_t *) SYSBK_OLDAREA) ->TOD_Low, processThrowing); /* Calculating kernel times */
-            LDST(runningPcb->sysbk_new);          
-        }
-        else terminateProcess(runningPcb); 
+        if (!passup((state_t*)SYSBK_OLDAREA))
+            terminateProcess(runningPcb); 
     }
 
     else if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_SYSCALL){
@@ -488,13 +463,8 @@ void sysHandler(){
                         *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
                         *       If its not , calls SYS2 to abort the process
                     */
-
-                    if (runningPcb->sysbk_new !=NULL){
-                        *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
-                        updateTimer();
-                        LDST(runningPcb->sysbk_new);          
-                    }
-                    else terminateProcess(runningPcb); 
+                    if (!passup((state_t*)SYSBK_OLDAREA))
+                        terminateProcess(runningPcb);
                     break;
             }
 
@@ -516,16 +486,12 @@ void sysHandler(){
             if(userRegisters->a1 <= 10){
                 userRegisters->CP15_Cause = EXC_RESERVEDINSTR;
                 *((state_t*)PGMTRAP_OLDAREA) = *userRegisters;
-                pgmTrapHandler();
+                if (!passup((state_t *)PGMTRAP_OLDAREA))
+                    terminateProcess(runningPcb);
             }
             else{
-                if (runningPcb->sysbk_new !=NULL){
-                    *(runningPcb->sysbk_old)=  *((state_t*)SYSBK_OLDAREA);
-                    updateTimer();
-                    kernelTimeAccounting(((state_t *) SYSBK_OLDAREA) ->TOD_Hi, ((state_t *) SYSBK_OLDAREA) ->TOD_Low, processThrowing); /* Calculating kernel times */
-                    LDST(runningPcb->sysbk_new);          
-                }
-                else terminateProcess(runningPcb);
+                    if (!passup((state_t*)SYSBK_OLDAREA))
+                        terminateProcess(runningPcb);
             }
         }
     }

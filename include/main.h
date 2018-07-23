@@ -52,5 +52,6 @@ extern void debug();
 int status;
 int debug1;
 int debug2;
+cpu_t times[6];
 #endif // DEBUG
 #endif // MAIN_H

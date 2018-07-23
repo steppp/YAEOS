@@ -163,7 +163,7 @@ void kernelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* proc
     nowTOD += getTODLO();
 
     nowTOD -= newKernelTime; /* Substract the TOD to the kernel time calculated  */
-    runningPcb->kerneltime += nowTOD; /* Sum the slice of time to the total kernel time */
+    process->kerneltime += nowTOD; /* Sum the slice of time to the total kernel time */
 }
 
 /* TOD of when a process becomes running */
@@ -173,4 +173,41 @@ void freezeLastTime(pcb_t *p) {
     p->lasttime = getTODHI(); /* Assigning the Hi part at the variable... */
     p->lasttime <<= 32; /* ..shifting in the Hi part of the number... */
     p->lasttime += getTODLO(); /* ...and sum the lower part */
+}
+
+int passup(state_t *old_to_save)
+{
+
+    if ((runningPcb == NULL) || (old_to_save == NULL))
+        return 0;
+    else
+    {
+        state_t *new,*old;
+        if (old_to_save == (state_t*) PGMTRAP_OLDAREA)
+        {
+            new = runningPcb->pgmtrap_new;
+            old = runningPcb->pgmtrap_old;
+        }
+        else if (old_to_save == (state_t*) TLB_OLDAREA)
+        {
+            new = runningPcb->tlb_new;
+            old = runningPcb->tlb_old;
+        }
+        else if (old_to_save == (state_t*) SYSBK_OLDAREA)
+        {
+            new = runningPcb->sysbk_new;
+            old = runningPcb->sysbk_old;
+        }
+        if ((new == NULL) || (old == NULL))
+            return 0;
+        else
+        {
+            *old = *old_to_save;
+            kernelTimeAccounting(((state_t *) TLB_OLDAREA) ->TOD_Hi, ((state_t *) TLB_OLDAREA)
+                    ->TOD_Low, runningPcb); /* Calculating kernel times */
+            updateTimer();
+            freezeLastTime(runningPcb);
+            LDST(new);
+        }
+    }
 }
