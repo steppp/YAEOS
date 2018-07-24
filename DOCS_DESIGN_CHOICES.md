@@ -42,11 +42,38 @@ Per-trap handler
 ## Syscalls 
 
 ### SYS1: Create process
-
 Tries to allocate a new process, if succesful configures it with the parameters 
 and returns 0, else returns -1.
 
 Parameters configurations consists in setting times, hierarchy, priorities, 
 trap handlers. 
 
-In the end puts the new process in ready queue
+In the end puts the new process in ready queue.
+
+### SYS2: Terminate process
+Kills the process and all its childs.
+
+If the process to kill passed is NULL then kills current running process. 
+
+If the process to kill is the current running process the function calls the
+scheduler dispatcher.
+
+If in the subtree there is a parent processes waiting for child it unblocks the
+ parent process.
+
+Every blocked/suspended process in the subtree are removed from any queue is 
+blocked on and updates kernel fields in according of each process' status.
+
+It returns 0 if process is killed, -1 otherwise.
+
+### SYS3: P
+This makes a P in the semaphore passed by parameter. 
+
+His behaviour is according to a simple semaphore.
+
+### SYS4 : V
+
+This makes a V in the semaphore passed by parameter. 
+
+His behaviour is according to a simple semaphore.
+ 
