@@ -369,18 +369,20 @@ void sysHandler(){
     state_t *userRegisters = (state_t*) SYSBK_OLDAREA;
     pcb_t *processThrowing = runningPcb;
 
+    int passupFlag=0; /* Used to differentiate the exit point, 0 is false 1 is true */
+    state_t *passupHandler=NULL; /* Used to differentiate the exit point, 0 is false 1 is true */
+
+
     /* Accounting user times when the process has stopped */
     userTimeAccounting(((state_t *) SYSBK_OLDAREA)->TOD_Hi, ((state_t *) SYSBK_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
     /* Checks the cause */
     if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_BREAKPOINT){
-        /*Breakpoint, sends it to the higher level handler if present, if not terminates the process*/
-        if (!passup((state_t*)SYSBK_OLDAREA))
-        {
-            terminateProcess(runningPcb); 
-            dispatch(NULL);
+        /*Breakpoint, sets the appropriate flags , it will be handled later*/
+        passupFlag=1;
+	passupHandler= (state_t*)SYSBK_OLDAREA;
         }
-    }
+    
 
     else if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_SYSCALL){
         /*  SYScall
@@ -468,27 +470,13 @@ void sysHandler(){
                     break;
                 default:
                     /* 
-                        * Syscall >10.
-                        *   Checks if a SYS5 has been called for the current process (The one who triggered the SYSCALL)
-                        *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
-                        *       If its not , calls SYS2 to abort the process
+                        * Syscall >10. Sets the appropriate flags, it will be handled later.
                     */
-                    if (!passup((state_t*)SYSBK_OLDAREA))
-                    {
-                        terminateProcess(runningPcb);
-                        dispatch(NULL);
-                    }
+                    passupFlag=1;
+		    passupHandler=(state_t*)SYSBK_OLDAREA;
                     break;
             }
-
-            kernelTimeAccounting(((state_t *) SYSBK_OLDAREA) ->TOD_Hi, ((state_t *) SYSBK_OLDAREA) ->TOD_Low, processThrowing); /* Calculating kernel times */
-
-            /* Restores the processor's state to the the process that called the syscall, eventually with the
-            a1 register modified to keep the return value */
-            if (runningPcb != NULL)
-                restoreRunningProcess(userRegisters);
-            else
-                dispatch(NULL);
+		passupFlag=0; /* No need to passup, it needs to restore the old process or dispatch a new one, sets the flag accordingly and will handle it later*/
         }
         else{
             /*  It was not running in kernel mode
@@ -499,19 +487,31 @@ void sysHandler(){
             if(userRegisters->a1 <= 10){
                 userRegisters->CP15_Cause = EXC_RESERVEDINSTR;
                 *((state_t*)PGMTRAP_OLDAREA) = *userRegisters;
-                if (!passup((state_t *)PGMTRAP_OLDAREA))
-                {
-                    terminateProcess(runningPcb);
-                    dispatch(NULL);
-                }
+              	passupFlag=1;
+	       	passupHandler=(state_t*)PGMTRAP_OLDAREA;	
             }
             else{
-                    if (!passup((state_t*)SYSBK_OLDAREA))
-                    {
-                        terminateProcess(runningPcb);
-                        dispatch(NULL);
-                    }
+            	passupFlag=1;
+	        passupHandler=(state_t*)SYSBK_OLDAREA;	
             }
         }
+    }
+  /*Passup or dispatch handler, 
+   *	If the flag is set to 1 , it passes up to the handler saved in passupHandler
+   *	Else it checks the runningprocess
+   *		if there is a running process it restores the one who called the SYSCALL
+   *		else it calls dispatch
+   */
+    if(passupFlag=1){
+	    if(!passup(passupHandler)){
+		    terminateProcess(runningPcb);
+		    dispatch(NULL);
+	    }
+    }
+    else{
+	    if(runningPcb!=NULL){
+		    restoreRunningProces(userRegisters);
+	    }
+	    else{ dispatch(NULL);}
     }
 }
