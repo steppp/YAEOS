@@ -85,6 +85,7 @@ Program trap) should be called when a trap is raised.
 
 This syscall should be called only once a time for a process.
 
-You have to specify old and new areas where are saved/loaded the process status.
+You have to specify old and new areas where are saved/loaded the process status
+when specified trap has raised.
 
 This syscall returns 0 in case of success, -1 otherwise.s
