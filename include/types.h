@@ -10,9 +10,14 @@ typedef unsigned long long cpu_t; /* cpu time type */
 
 typedef enum {PSEUDOCLOCK, TIMESLICE, AGING} timcause_t; /* cause of interval timer interrupt type */
 
+/* Special cases when there are no more ready PCBs labels */
+typedef enum{ STATUSDEADLOCK=1, STATUSWAIT=2, STATUSHALT=3} systemstatus_t;
+
 /* syscall labels */
 enum {CREATEPROCESS = 1,TERMINATEPROCESS = 2,SEMP = 3,SEMV = 4,SPECHDL = 5,GETTIME = 6,WAITCLOCK =
     7,IODEVOP = 8,GETPIDS = 9,WAITCHLD = 10};
+
+
 
 /* trap handler labels */
 enum {SPECPGMT,SPECTLB,SPECSYSBP};

@@ -40,10 +40,26 @@ void dispatch(state_t *to_save)
     }
     else
     {
-        int status = getSTATUS();
-        updateTimer();
-        setSTATUS(STATUS_ALL_INT_ENABLE(status));
-        WAIT(); /* wait for an interrupt */
+        switch(noMoreReadyPcbs()){
+            case STATUSDEADLOCK:
+                tprint("Deadlock detected, panicking (MESSAGE BY KERNEL, NOT P2TEST)");    
+                PANIC();
+                break;
+            case STATUSWAIT:{
+                int status = getSTATUS();
+                updateTimer();
+                setSTATUS(STATUS_ALL_INT_ENABLE(status));
+                WAIT();              
+                }break;
+            case STATUSHALT:
+                tprint("Shutting down. Goodnight sweet prince (MESSAGE BY   KERNEL, NOT P2TEST)");    
+                HALT();
+                break;
+            default:
+                tprint("noMoreReadyPcs returned a number that isnt handled, this can't happen, calling PANIC (MESSAGE BY   KERNEL, NOT P2TEST)"); 
+                PANIC(); 
+                break;
+        }
     }
 }
 
@@ -79,22 +95,19 @@ void increasePriority(pcb_t *q, void *arg)
 }
 
 /* Gets called when there are no more ready processes and handles all possibilities */
-void noMoreReadyPcbs(){
+int checkSystemStatus(){
 
     /* If there are no more processed in the ready queue and no active ones the system has done its job and needs to shut down */
     if (activePcbs == 0 && softBlockedPcbs == 0){ 
-    tprint("Shutting down. Goodnight sweet prince (MESSAGE BY KERNEL, NOT P2TEST)");    
-    HALT();
+        return STATUSHALT;
     }
     /* If there are no more processed in the ready queue but some processes are soft-blocked then the system needs to be put in a Wait state to wait for an interrupt */
     else if(softBlockedPcbs!=0){
-    tprint("Twiddling thumbs mode initialized (MESSAGE BY KERNEL, NOT P2TEST)");
-    WAIT();
+        return STATUSWAIT;
     }
     /* If there are no more processed in the ready queue and no processes are soft-blocked then the system is probably in deadlock */
     else if (activePcbs!=0){
-    tprint("Deadlock detected, shutting down (MESSAGE BY KERNEL, NOT P2TEST)");    
-    PANIC();
+        return STATUSDEADLOCK;
     }
 }
 

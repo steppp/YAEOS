@@ -9,7 +9,7 @@
 void dispatch(state_t *to_save);
 
 /* Gets called when there are no more ready processes and handles all possibilities*/
-void noMoreReadyPcbs();
+int checkSystemStatus();
 
 /* Increases the priority a process with p as a pcb by 1, if less than MAXPRIO */
 void increasePriority(pcb_t *p, void *arg);

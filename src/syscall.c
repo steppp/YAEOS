@@ -6,7 +6,6 @@
 #include <list.h>
 #include <tree.h>
 #include <semaphore.h>
-#include <pcbFree.h>
 #include <main.h>
 #include <types.h>
 #include <interrupts.h>

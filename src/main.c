@@ -3,7 +3,6 @@
 #include <pcb.h>
 #include <scheduler.h>
 #include <syscall.h>
-#include <stdlib.h>
 #include <arch.h>
 #include <uARMconst.h>
 #include <interrupts.h>
