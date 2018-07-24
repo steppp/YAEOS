@@ -76,4 +76,15 @@ His behaviour is according to a simple semaphore.
 This makes a V in the semaphore passed by parameter. 
 
 His behaviour is according to a simple semaphore.
- 
+
+
+### SYS5: Specify trap handlers
+
+Save handlers specifying what type of handler (Syscall/breackpoint, TLB trap or
+Program trap) should be called when a trap is raised. 
+
+This syscall should be called only once a time for a process.
+
+You have to specify old and new areas where are saved/loaded the process status.
+
+This syscall returns 0 in case of success, -1 otherwise.s
