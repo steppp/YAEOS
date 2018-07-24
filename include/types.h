@@ -11,10 +11,11 @@ typedef unsigned long long cpu_t; /* cpu time type */
 typedef enum {PSEUDOCLOCK, TIMESLICE, AGING} timcause_t; /* cause of interval timer interrupt type */
 
 /* syscall labels */
-typedef enum {CREATEPROCESS,TERMINATEPROCESS,SEMP,SEMV,SPECHDL,GETTIME,WAITCLOCK,IODEVOP,GETPIDS,WAITCHLD} syscall_t;
+enum {CREATEPROCESS = 1,TERMINATEPROCESS = 2,SEMP = 3,SEMV = 4,SPECHDL = 5,GETTIME = 6,WAITCLOCK =
+    7,IODEVOP = 8,GETPIDS = 9,WAITCHLD = 10};
 
 /* trap handler labels */
-typedef enum {SPECPGMT,SPECTLB,SPECSYSBP} traphdl_t;
+enum {SPECPGMT,SPECTLB,SPECSYSBP};
 
 typedef unsigned int memaddr;
 

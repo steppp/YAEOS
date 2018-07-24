@@ -18,11 +18,11 @@ extern int p1p1addr;
 void P(int *semaddr)
 {
     /*
-        Retrieve the semaphore address from register a2
-        Check if the value of the semaphore is >0
-        If it is, decrease it and return
-        Otherwise, take the running process' pcb and insert it in the semaphore queue and call a
-        scheduler dispatch
+        decrease the semaphore
+        if the semaphore < 0 then
+            suspend the running process
+            save its state into its pcb
+            insert on the semaphore queue
     */
     (*semaddr)--;
     if(*semaddr < 0)
@@ -40,6 +40,11 @@ void P(int *semaddr)
 
 void V(int *semaddr,state_t *to_save)
 {
+    /*
+        increase the semaphore
+        if the semaphore <= 0
+            remove a process from the semaphore queue and insert it in the readyQueue
+     */
     (*semaddr)++;
     if(*semaddr <= 0)   /* This means that some process was blocked on this semaphore */
     {
@@ -64,9 +69,7 @@ int createProcess(state_t *statep, int priority, void **cpid){
             *cpid=newproc;
         newproc->waitingOnIO = 0;
         newproc->waitingForChild = 0;
-        newproc->usertime = newproc->kerneltime = newproc->wallclocktime = 0;
-        newproc->sysbk_new = newproc->sysbk_old = newproc->tlb_new = newproc->tlb_old =
-            newproc->pgmtrap_new = newproc->pgmtrap_old = NULL;
+        newproc->usertime = newproc->kerneltime = 0;
 
         activePcbs++;
 
@@ -324,7 +327,6 @@ void pgmTrapHandler(){
 
     /* Accounting user times when the process has stopped */
     userTimeAccounting(((state_t *) PGMTRAP_OLDAREA)->TOD_Hi, ((state_t *) PGMTRAP_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
-
     if (!passup((state_t*)PGMTRAP_OLDAREA))
     {
         terminateProcess(runningPcb);

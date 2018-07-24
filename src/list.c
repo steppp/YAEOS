@@ -6,6 +6,7 @@ void insertProcQ(pcb_t **head, pcb_t *p){
         -If there are elements checks if p needs to be placed before or after the first element
             -Checks if p needs to be placed right after the first element, if not proceedes recursevly on the queue
     */
+#if 0
     if((*head)){
 
         if(p->p_priority>(*head)->p_priority){
@@ -36,7 +37,23 @@ void insertProcQ(pcb_t **head, pcb_t *p){
     {
         (*head)=p;
     }
+#endif
+    if (*head)
+    {
+        if (p->p_priority > (*head)->p_priority)
+        {
+            p->p_next = *head;
+            *head = p;
+        }
+        else
+            insertProcQ(&((*head)->p_next),p);
 
+    }
+    else
+    {
+        *head = p;
+        (*head)->p_next = NULL;
+    }
 }
 
 
@@ -71,6 +88,7 @@ pcb_t *outProcQ(pcb_t **head, pcb_t *p){
             -Checks if there are elements beside the first one , if not returns NULL
                 -Checks if the element right after the first one is p , deletes and returns it if it is , if not proceedes recursevly on the queue
     */
+#if 0
     if((*head)){
         if(p==(*head)){
            (*head)=(*head)->p_next;
@@ -97,7 +115,19 @@ pcb_t *outProcQ(pcb_t **head, pcb_t *p){
     {
         return NULL;
     }
-
+#endif
+    if (*head)
+    {
+        if (p == *head)
+        {
+            *head = (*head)->p_next;
+            return p;
+        }
+        else
+            return outProcQ(&((*head)->p_next),p);
+    }
+    else
+        return NULL;
 }
 
 

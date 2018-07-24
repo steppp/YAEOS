@@ -3,21 +3,20 @@
 #include <pcb.h>
 
 /*
- * Stops the running process and puts it in the readyQueue
- * Loads the first process in the ready queue and runs it
+ *  Stops the running process and puts it in the readyQueue
+ *  Loads the first process in the ready queue and runs it
  */
 void dispatch(state_t *to_save);
 
 /* Gets called when there are no more ready processes and handles all possibilities*/
 void noMoreReadyPcbs();
 
-/* Increases the priority of all processes in the queue pointed by p by 1 */
+/* Increases the priority a process with p as a pcb by 1, if less than MAXPRIO */
 void increasePriority(pcb_t *p, void *arg);
 
-/* Suspends the running process and returns its address
- * Returns NULL if no processes are running
- * WARNING a dispatch should be called after this function, otherwise the processor will continue to
- * execute the previous code but the running process pointer won't point to the right process
+/*  Suspends the running process and returns its address
+ *  Returns NULL if no processes are running
+ *  WARNING a dispatch should be called after this function, at some point
  */
 pcb_t *suspend();
 
@@ -28,9 +27,9 @@ void restoreRunningProcess(state_t *oldarea);
 
 /*
     Inserts a new process in the ready queue. If the new process has a greater priority than the
-    current running process, the currently running process is suspendedand the state of the process,
+    current running process, the currently running process is suspended and the state of the process,
     passed in the variable to_save, is saved in its pcb. This takes into account that if the cause
-    of the interrupt was a device the pc register must be decremented by 4
+    of the exception was a device interrupt the pc register must be decremented by 4
     Returns 0 on successful insertion, -1 on failure
  */
 int insertInReady(pcb_t *p, state_t *to_save);

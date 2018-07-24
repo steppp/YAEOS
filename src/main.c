@@ -36,8 +36,7 @@ void initFirstPCB() {
         .CP15_Control = CP15_CONTROL_NULL                   // VM disabled
     };
 
-    pcb_t *pcb;
-    createProcess(&p_s, 0, (void**)&pcb);
+    createProcess(&p_s, 0, NULL);
 }
 
 void initVars() {

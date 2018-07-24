@@ -26,7 +26,7 @@ builddir:
 	if [ ! -d "$(BUILD)" ]; then mkdir "$(BUILD)"; fi;
 
 executable: $(OBJ)
-	$(CC) -nostartfiles -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x -o $(ONAME) /usr/include/uarm/crtso.o /usr/include/uarm/libuarm.o $^
+	$(CC) -nostartfiles -T /usr/include/uarm/ldscripts/elf32ltsarm.h.uarmcore.x -o $(ONAME) /usr/include/uarm/crtso.o /usr/include/uarm/libuarm.o  /usr/include/uarm/libdiv.o $^
 
 $(BUILD)/p2test.o: $(SRC)/p2test.c $(INCLUDE)/asl.h $(DEPS)
 	$(CC) $(CFLAGS) $(HDIR) -o $@ $<

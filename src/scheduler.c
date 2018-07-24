@@ -12,9 +12,15 @@ void dispatch(state_t *to_save)
 {
     /*
         Check if there are processes in the ready queue.
-            If there are, check if there is a running process.
-                If there is one, load CPU state in a temp variable and save a temp pointer to it.
-                Load the first process in the ready queue on the cpu, removing it
+            If there are
+                remove the first one and put it in a variable
+                check if there is a running process.
+                If there is one
+                    insert it in the ready queue
+                set the running process to the removed one
+                update the interval Timer
+                Save the time of loading
+                Load the running process
             Else
                 check if there could be a deadlock
                 if so, halt
@@ -43,6 +49,16 @@ void dispatch(state_t *to_save)
 
 pcb_t *suspend()
 {
+    /*
+        If there is a running process, 
+            save it into a variable
+            restore its original priority
+            set the running process to null
+            return the process
+        else
+            return NULL
+            
+     */
     if (runningPcb != NULL)
     {
         pcb_t *p;   /* holds the running pcb pointer for return*/
@@ -58,32 +74,25 @@ pcb_t *suspend()
 void increasePriority(pcb_t *q, void *arg)
 {
     if (q != NULL)
-    {
-        for (pcb_t *i = q; i != NULL; i = i->p_next)
-            if (i->p_priority < MAXPRIO)
-            {
-                i->p_priority++;
-                if (runningPcb != NULL && i->p_priority > runningPcb->p_priority)
-                    insertInReady(runningPcb,(state_t *)INT_OLDAREA);
-            }
-    }
+        if (q->p_priority < MAXPRIO)
+            q->p_priority++;
 }
 
 /* Gets called when there are no more ready processes and handles all possibilities */
 void noMoreReadyPcbs(){
 
     /* If there are no more processed in the ready queue and no active ones the system has done its job and needs to shut down */
-    if (readyPcbs==0 && activePcbs==0){ 
+    if (activePcbs == 0 && softBlockedPcbs == 0){ 
     tprint("Shutting down. Goodnight sweet prince (MESSAGE BY KERNEL, NOT P2TEST)");    
     HALT();
     }
     /* If there are no more processed in the ready queue but some processes are soft-blocked then the system needs to be put in a Wait state to wait for an interrupt */
-    else if(readyPcbs==0 && softBlockedPcbs!=0){
+    else if(softBlockedPcbs!=0){
     tprint("Twiddling thumbs mode initialized (MESSAGE BY KERNEL, NOT P2TEST)");
     WAIT();
     }
     /* If there are no more processed in the ready queue and no processes are soft-blocked then the system is probably in deadlock */
-    else if (readyPcbs==0 && softBlockedPcbs==0){
+    else if (activePcbs!=0){
     tprint("Deadlock detected, shutting down (MESSAGE BY KERNEL, NOT P2TEST)");    
     PANIC();
     }
@@ -183,6 +192,8 @@ int passup(state_t *old_to_save)
     else
     {
         state_t *new,*old;
+        new = NULL;
+        old = NULL;
         if (old_to_save == (state_t*) PGMTRAP_OLDAREA)
         {
             new = runningPcb->pgmtrap_new;

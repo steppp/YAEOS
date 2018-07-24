@@ -35,7 +35,7 @@ void interruptHandler()
 
     unsigned int cause = ((state_t *) INT_OLDAREA)->CP15_Cause; /* interrupt cause (CP15_Cause) */
     int dispatchFlag = 0; /* 1 if the interrupt cause was the timer and a dispatch is necessary, 0 otherwise */
-    pcb_t *p = NULL;
+    pcb_t *p = NULL;    /* Will hold the process that will be "charged" with the spent kernel time will */
 
     userTimeAccounting(( (state_t *) INT_OLDAREA)->TOD_Hi, ( (state_t *) INT_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 
@@ -76,9 +76,6 @@ void interruptHandler()
                 }
                 p->p_s.a1 = deviceRegister->dtp.status; /* Returning the status of the device */
                 V(&normalDevices[i-INT_LOWEST][j],(state_t *)INT_OLDAREA);
-                p->waitingOnIO = 0;
-                softBlockedPcbs--;
-                activePcbs++;
                 deviceRegister->dtp.command = DEV_C_ACK; /* acknowledging the interrupt */
                 break;
             case INT_TERMINAL:
@@ -105,15 +102,15 @@ void interruptHandler()
                 else if (which == RECV)
                     p->p_s.a1 = deviceRegister->term.recv_status;
                 V(&terminals[j][which],(state_t*)INT_OLDAREA);
-                p->waitingOnIO = 0;
-                softBlockedPcbs--;
-                activePcbs++;
                 if (which == TRANSM)
                     deviceRegister->term.transm_command = DEV_C_ACK; /* acknowledging the interrupt */
                 else if (which == RECV)
                     deviceRegister->term.recv_command = DEV_C_ACK; /* acknowledging the interrupt */
                 break;
         }
+        p->waitingOnIO = 0;
+        softBlockedPcbs--;
+        activePcbs++;
     }
     
     /* Accounting kernel time for this process */
@@ -159,9 +156,16 @@ int handleTimer()
                 ret = 1;
             break;
         case AGING:
-            agingTicks++;
-            if (readyPcbs > 0)
-                forallProcQ(readyQueue,increasePriority,NULL);
+            {
+                agingTicks++;
+                if (readyPcbs > 0)
+                {
+                    forallProcQ(readyQueue,increasePriority,NULL);
+                    pcb_t *p = headProcQ(readyQueue);
+                    if (p->p_priority > runningPcb->p_priority)
+                        insertInReady(runningPcb,(state_t*)INT_OLDAREA);
+                }
+            }
             break;
     }
 

@@ -404,7 +404,6 @@ void test(void) {
 	SYSCALL(WAITCHLD, 0, 0, 0);
 
 #ifdef DEBUG
-    debug2 = 0x42;
     print("init is gonna create p2\n");
 #endif // DEBUG
 	SYSCALL(CREATEPROCESS, (memaddr)&p2state, 10, (memaddr)NULL);
@@ -418,7 +417,7 @@ void test(void) {
 	SYSCALL(CREATEPROCESS, (memaddr)&p3state, 1, (memaddr)NULL);
 	SYSCALL(CREATEPROCESS, (memaddr)&p4state, 3, (memaddr)NULL);
 	SYSCALL(CREATEPROCESS, (memaddr)&p5state, 5, (memaddr)NULL);
-	SYSCALL(CREATEPROCESS, (memaddr)&p6state, 7, (memaddr)NULL);
+//	SYSCALL(CREATEPROCESS, (memaddr)&p6state, 7, (memaddr)NULL);
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	SYSCALL(WAITCHLD, 0, 0, 0);
