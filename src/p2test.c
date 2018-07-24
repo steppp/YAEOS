@@ -143,7 +143,7 @@ void p3(void) {
 
 	if (p3inc > 2) {
 		print("error: second incarnation of p3 did not terminate\n");
-		PANIC;
+		PANIC();
 	}
 	SYSCALL(SEMP, (memaddr)&synp3, 0, 0);
 	p3state.sp = get_stack_area();
@@ -293,7 +293,7 @@ void p6(void) {
 
 	print("p6 generating a program trap without setting trap vector\n");
 
-	i /= j;
+	i = *((int*)0x43);
 
 	print("error - p6 still executing\n");
 	PANIC();
@@ -417,7 +417,7 @@ void test(void) {
 	SYSCALL(CREATEPROCESS, (memaddr)&p3state, 1, (memaddr)NULL);
 	SYSCALL(CREATEPROCESS, (memaddr)&p4state, 3, (memaddr)NULL);
 	SYSCALL(CREATEPROCESS, (memaddr)&p5state, 5, (memaddr)NULL);
-//	SYSCALL(CREATEPROCESS, (memaddr)&p6state, 7, (memaddr)NULL);
+  	SYSCALL(CREATEPROCESS, (memaddr)&p6state, 7, (memaddr)NULL);
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	SYSCALL(WAITCHLD, 0, 0, 0);
 	SYSCALL(WAITCHLD, 0, 0, 0);
