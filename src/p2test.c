@@ -293,6 +293,7 @@ void p6(void) {
 
 	print("p6 generating a program trap without setting trap vector\n");
 
+    // i /= j;
 	i = *((int*)0x43);
 
 	print("error - p6 still executing\n");

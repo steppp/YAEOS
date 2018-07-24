@@ -380,10 +380,8 @@ void sysHandler(){
     if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_BREAKPOINT){
         /*Breakpoint, sets the appropriate flags , it will be handled later*/
         passupFlag=1;
-	passupHandler= (state_t*)SYSBK_OLDAREA;
-        }
-    
-
+        passupHandler= (state_t*)SYSBK_OLDAREA;
+    }
     else if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_SYSCALL){
         /*  SYScall
          *  Checks if the process is running in system mode 
@@ -396,14 +394,6 @@ void sysHandler(){
                     /*  a2 should contain the physical address of a processor state area at the time this instruction is executed and a3 should contain the priority level
                      *  if it returns error it means that you cant allocate more processes, puts -1 in the return register
                      */
-                    //TODO: Visto che tanto cpid è il parametro che devo mettere in a1, e non viene controllato solo scritto, glielo passo direttamente e ci fa quello che vuole, togliere il commento se è giusto , altrimenti bisogna un attimo aggiustarlo
-#if 0
-                    succesful=createProcess((state_t *)userRegisters->a2 , (int) userRegisters->a3,(void **) userRegisters->a1);
-#endif // Linea originale
-                    /*
-                    Andrea: Non va bene perche' il pid del processo va salvato nella variabile
-                    passata come argomento in a4
-                     */
                     succesful=createProcess((state_t *)userRegisters->a2 , (int) userRegisters->a3,(void **) userRegisters->a4);
                     if (succesful==-1) userRegisters->a1=-1;
                     break;
@@ -411,8 +401,8 @@ void sysHandler(){
                     /* a2 should contain the value of the designated process’ PID */
                     succesful=terminateProcess( (void *)userRegisters->a2 );
                     if (succesful!=0){
-                            tprint("Syscall 2 (Terminate Process) returned an error state, literally impossible (MESSAGE BY KERNEL, NOT P2TEST)");
-                            PANIC();
+                        tprint("Syscall 2 (Terminate Process) returned an error state, literally impossible (MESSAGE BY KERNEL, NOT P2TEST)");
+                        PANIC();
                     }
                     break;
                 case SEMP:
@@ -446,22 +436,12 @@ void sysHandler(){
                 case IODEVOP:
                     /* a2 should contain the command and a3 should contain the device_command_register the command needs to be put into */
                     succesful=ioOperation((unsigned int) userRegisters->a2, (unsigned int *)userRegisters->a3);
-                    // userRegisters->a1=runningPcb->p_s.a1; //TODO: E' Giusto? in a1 mi serve lo status, e nell'interrupt handler me lo mette nel suo p_s.a1
-                    // Non e' questa system call ad occuparsi della restituzione dello status; in
-                    // piu' in questo modo non funzionerebbe comunque, perche' in userRegisters->a1
-                    // ci andrebbe il valore di ritorno dell'operazione di IO (che non sta in
-                    // runningPcb)
                     if (succesful!=0){
                         tprint("Syscall 8 (IO operation) returned an error state, literally impossible (MESSAGE BY KERNEL, NOT P2TEST)");
                         PANIC();
                     }
                     break;
                 case GETPIDS:
-                    /* TODO: Controllare se è corretto, molto probabilmente non lo è visto che le specifiche di Davoli e della tesi sono diverse
-                        Assumo che i valori da passare per parametro sono in a2 e a3, perchè comunque controlla che non siano null
-                        e li restituisco inserendoli in a1 e a2 come nelle altre syscall.
-                        Se ho fatto una cazzata scrivete nel gruppo "igor non programmare dopo che hai bevuto" e capirò
-                    */
                     getPids((void **)userRegisters->a2, (void **)userRegisters->a3);
                     break;
                 case WAITCHLD:
@@ -470,13 +450,12 @@ void sysHandler(){
                     break;
                 default:
                     /* 
-                        * Syscall >10. Sets the appropriate flags, it will be handled later.
-                    */
+                     * Syscall >10. Sets the appropriate flags, it will be handled later.
+                     */
                     passupFlag=1;
-		    passupHandler=(state_t*)SYSBK_OLDAREA;
+                    passupHandler=(state_t*)SYSBK_OLDAREA;
                     break;
             }
-		passupFlag=0; /* No need to passup, it needs to restore the old process or dispatch a new one, sets the flag accordingly and will handle it later*/
         }
         else{
             /*  It was not running in kernel mode
@@ -484,15 +463,14 @@ void sysHandler(){
              *      If yes, send it to the   PgmTrap handler with the error code EXC_RESERVEDINSTR
              *      if not, sends it to the corresponding higher level handler, if there isnt one terminates the process
              */
+            passupFlag=1;
             if(userRegisters->a1 <= 10){
                 userRegisters->CP15_Cause = EXC_RESERVEDINSTR;
                 *((state_t*)PGMTRAP_OLDAREA) = *userRegisters;
-              	passupFlag=1;
-	       	passupHandler=(state_t*)PGMTRAP_OLDAREA;	
+                passupHandler=(state_t*)PGMTRAP_OLDAREA;	
             }
             else{
-            	passupFlag=1;
-	        passupHandler=(state_t*)SYSBK_OLDAREA;	
+                passupHandler=(state_t*)SYSBK_OLDAREA;	
             }
         }
     }
@@ -502,15 +480,17 @@ void sysHandler(){
    *		if there is a running process it restores the one who called the SYSCALL
    *		else it calls dispatch
    */
-    if(passupFlag=1){
+    if(passupFlag){
 	    if(!passup(passupHandler)){
 		    terminateProcess(runningPcb);
 		    dispatch(NULL);
 	    }
     }
     else{
+        kernelTimeAccounting(((state_t *) SYSBK_OLDAREA) ->TOD_Hi, ((state_t *) SYSBK_OLDAREA)
+                ->TOD_Low,processThrowing);
 	    if(runningPcb!=NULL){
-		    restoreRunningProces(userRegisters);
+		    restoreRunningProcess(userRegisters);
 	    }
 	    else{ dispatch(NULL);}
     }

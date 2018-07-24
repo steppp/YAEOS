@@ -42,8 +42,8 @@ void dispatch(state_t *to_save)
     {
         /* If there are no more processed in the ready queue and no active ones the system has done its job and needs to shut down */
         if (activePcbs == 0 && softBlockedPcbs == 0){ 
-            tprint("Deadlock detected, panicking (MESSAGE BY KERNEL, NOT P2TEST)");    
-            PANIC();
+            tprint("Shutting down\n");    
+            HALT();
         }
         /* If there are no more processed in the ready queue but some processes are soft-blocked then the system needs to be put in a Wait state to wait for an interrupt */
         else if((softBlockedPcbs!=0) || (pseudoClockSem < 0)){
