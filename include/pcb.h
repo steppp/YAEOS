@@ -15,8 +15,8 @@ typedef struct pcb_t {
 	struct pcb_t *p_first_child;    /* Process' first child */
 	struct pcb_t *p_sib;            /* Process' right sibling */
 	state_t p_s;                    /* Processor's state */
-    int old_priority;               /* Original priority, to restore after aging*/
 	int p_priority;                 /* Current priority */
+    int old_priority;               /* Original priority, to restore after aging*/
 	int *p_semKey;                  /* Semaphore the process is blocked on */
     int waitingOnIO;                /* Used to count the number of softblocked processes */
     int childSem;                   /* Used to wait on a child */
