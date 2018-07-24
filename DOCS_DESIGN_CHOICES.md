@@ -4,7 +4,7 @@
 
 ## PCB design 
 
-In the pcb is used a lot of fields:
+Fields used in PCB:
 
 >- **p_next**: Pointer for the next element of the list. 
 >- **p_parent, p_first_child, p_sib**: Pointers for tree hierarchy of processes
@@ -29,7 +29,6 @@ unblock parent when it terminate), 0 otherwise.
 >- **sysbk_new, sysbk_old, tlb_new, tlb_old, pgmtrap_new, pgmtrap_old**: 
 Per-trap handler
 
-
 ---
 
 ## Scheduler
@@ -40,4 +39,14 @@ Per-trap handler
 
 ---
 
-## Syscalls
+## Syscalls 
+
+### SYS1: Create process
+
+Tries to allocate a new process, if succesful configures it with the parameters 
+and returns 0, else returns -1.
+
+Parameters configurations consists in setting times, hierarchy, priorities, 
+trap handlers. 
+
+In the end puts the new process in ready queue
