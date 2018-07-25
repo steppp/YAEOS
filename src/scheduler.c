@@ -40,19 +40,19 @@ void dispatch(state_t *to_save)
     }
     else
     {
-        /* If there are no more processed in the ready queue and no active ones the system has done its job and needs to shut down */
+        /* If there are no more processes in the ready queue and no active ones the system has done its job and needs to shut down */
         if (activePcbs == 0 && softBlockedPcbs == 0){ 
             tprint("Shutting down\n");    
             HALT();
         }
-        /* If there are no more processed in the ready queue but some processes are soft-blocked then the system needs to be put in a Wait state to wait for an interrupt */
+        /* If there are no more processes in the ready queue but some processes are soft-blocked then the system needs to be put in a Wait state to wait for an interrupt */
         else if((softBlockedPcbs!=0) || (pseudoClockSem < 0)){
             int status = getSTATUS();
             updateTimer();
             setSTATUS(STATUS_ALL_INT_ENABLE(status));
             WAIT();              
         }
-        /* If there are no more processed in the ready queue and no processes are soft-blocked then the system is probably in deadlock */
+        /* If there are no more processes in the ready queue and no processes are soft-blocked then the system is probably in deadlock */
         else if (activePcbs!=0){
             tprint("Deadlock detected, panicking (MESSAGE BY KERNEL, NOT P2TEST)");    
             PANIC();
@@ -89,23 +89,6 @@ void increasePriority(pcb_t *q, void *arg)
     if (q != NULL)
         if (q->p_priority < MAXPRIO)
             q->p_priority++;
-}
-
-/* Gets called when there are no more ready processes and handles all possibilities */
-int checkSystemStatus(){
-
-    /* If there are no more processed in the ready queue and no active ones the system has done its job and needs to shut down */
-    if (activePcbs == 0 && softBlockedPcbs == 0){ 
-        return STATUSHALT;
-    }
-    /* If there are no more processed in the ready queue but some processes are soft-blocked then the system needs to be put in a Wait state to wait for an interrupt */
-    else if((softBlockedPcbs!=0) || (pseudoClockSem < 0)){
-        return STATUSWAIT;
-    }
-    /* If there are no more processed in the ready queue and no processes are soft-blocked then the system is probably in deadlock */
-    else if (activePcbs!=0){
-        return STATUSDEADLOCK;
-    }
 }
 
 void restoreRunningProcess(state_t *oldarea)

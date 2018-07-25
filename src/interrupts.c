@@ -35,7 +35,7 @@ void interruptHandler()
 
     unsigned int cause = ((state_t *) INT_OLDAREA)->CP15_Cause; /* interrupt cause (CP15_Cause) */
     int dispatchFlag = 0; /* 1 if the interrupt cause was the timer and a dispatch is necessary, 0 otherwise */
-    pcb_t *p = NULL;    /* Will hold the process that will be "charged" with the spent kernel time will */
+    pcb_t *p = NULL;    /* Will hold the process that will be "charged" with the spent kernel time */
 
     userTimeAccounting(( (state_t *) INT_OLDAREA)->TOD_Hi, ( (state_t *) INT_OLDAREA)->TOD_Low); /* Now I account user time from the last moment I calculated it */
 

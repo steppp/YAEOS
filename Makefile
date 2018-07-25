@@ -3,7 +3,7 @@ CC=arm-none-eabi-gcc
 # where to look for .h files
 HDIR=-I /usr/include/uarm/ -I include
 # machine specific compilation options
-CFLAGS=-c -mcpu=arm7tdmi -DDEBUG
+CFLAGS=-c -mcpu=arm7tdmi
 # object files folder
 BUILD=build
 # source code folder
