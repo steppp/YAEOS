@@ -4,7 +4,6 @@
 void insertFirst(pcb_t *p) {
     if (!p)
         return;
-
     p->p_next = pcbFree_h;
     pcbFree_h = p;
 }
@@ -12,7 +11,7 @@ void insertFirst(pcb_t *p) {
 void insertLastElements(int currentIndex) {
     if (currentIndex < MAXPROC) {
 	/*
-	 * extraxt the element at the specified index from the table
+	 * Extract the element at the specified index from the table
 	 * and insert it in the first position of the pcbFree_h list
 	 * then call recursively the function until the index go past
      * the dimension of pcbFree_table
@@ -28,19 +27,17 @@ void initPcbs() {
 }
 
 void freePcb(pcb_t *p) {
-    /*
-     * insert the new pcb in first position
-     */
+    /* Insert the new pcb in first position */
     insertFirst(p);
 }
 
 pcb_t *allocPcb() {
-    pcb_t *p = pcbFree_h;//p is the head of pcb list
-    //if the head is NULL return NULL
+    pcb_t *p = pcbFree_h;/* p is the head of pcb list */
+    /* If the head is NULL return NULL */
     if (p == NULL) return NULL;
-    //The head is the next element of the head
+    /* The head is the next element of the head */
     pcbFree_h = pcbFree_h->p_next;
-    //Setting all pcb_t fields to NULL/0
+    /* Setting all pcb_t fields to NULL/0 */
     p->p_next = NULL;
     p->p_parent = NULL;
     p->p_first_child = NULL;

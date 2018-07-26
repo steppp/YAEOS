@@ -17,21 +17,21 @@ extern int p1p1addr;
 void P(int *semaddr)
 {
     /*
-        decrease the semaphore
-        if the semaphore < 0 then
-            suspend the running process
-            save its state into its pcb
-            insert on the semaphore queue
-    */
+     *  Decrease the semaphore
+     *  if the semaphore < 0 then
+     *      suspend the running process
+     *      save its state into its pcb
+     *      insert on the semaphore queue
+     */
     (*semaddr)--;
     if(*semaddr < 0)
     {
         pcb_t *p;   /* holds the former running pcb pointer*/
         p = suspend();
         p->p_s = *((state_t *) SYSBK_OLDAREA); /*   saving the process' state in its pcb. The P
-                                                    operation is only called in the syscall module by
-                                                    other syscalls, so the process' state is always in
-                                                    SYSBK_OLDAREA
+                                                *   operation is only called in the syscall module by
+                                                *   other syscalls, so the process' state is always in
+                                                *   SYSBK_OLDAREA
                                                 */
         insertBlocked(semaddr,p);
     }
@@ -40,9 +40,9 @@ void P(int *semaddr)
 void V(int *semaddr,state_t *to_save)
 {
     /*
-        increase the semaphore
-        if the semaphore <= 0
-            remove a process from the semaphore queue and insert it in the readyQueue
+     *  increase the semaphore
+     *  if the semaphore <= 0
+     *      remove a process from the semaphore queue and insert it in the readyQueue
      */
     (*semaddr)++;
     if(*semaddr <= 0)   /* This means that some process was blocked on this semaphore */
@@ -73,14 +73,14 @@ int createProcess(state_t *statep, int priority, void **cpid){
         activePcbs++;
 
         /* Initializing variables of trap handlers and times */
-        //trap handlers to NULL
+        /* trap handlers to NULL */
         newproc->sysbk_new = NULL;
         newproc->sysbk_old = NULL;
         newproc->tlb_new = NULL;
         newproc->tlb_old = NULL;
         newproc->pgmtrap_new = NULL;
         newproc->pgmtrap_old = NULL;
-        //defining starting wallclocktime
+        /* defining starting wallclocktime */
         newproc->wallclocktime = getTODHI();
         newproc->wallclocktime <<= 32;
         newproc->wallclocktime += getTODLO();
@@ -91,7 +91,7 @@ int createProcess(state_t *statep, int priority, void **cpid){
 		return 0;
 	}
 	else{
-		//You can't create a new Process, return -1
+		/* You can't create a new Process, return -1 */
 		return -1;
 	}
 }
@@ -102,10 +102,10 @@ void killProcessSubtree(pcb_t *pcb){
 	pcb_t *child;
 	while ((child=removeChild(pcb)) != NULL) killProcessSubtree(child);
 
-    // resume the parent process if it has been suspended using the SYS10
-    if (pcb->p_parent->waitingForChild) {       // if the parent is waiting for a child to terminate
-        V(pcb->p_parent->p_semKey,(state_t*)SYSBK_OLDAREA);             // unblock the parent process
-        pcb->p_parent->waitingForChild = 0;     // the parent is no longer waiting for a child to terminate
+    /* resume the parent process if it has been suspended using the SYS10 */
+    if (pcb->p_parent->waitingForChild) {       /* if the parent is waiting for a child to terminate */
+        V(pcb->p_parent->p_semKey,(state_t*)SYSBK_OLDAREA);             /* unblock the parent process  */
+        pcb->p_parent->waitingForChild = 0;     /* the parent is no longer waiting for a child to terminate */
     }
 
     if (outProcQ(&readyQueue,pcb) != NULL) /* removing it from ready queue*/
@@ -126,8 +126,7 @@ void killProcessSubtree(pcb_t *pcb){
 }
 
 /* SYCALL 2 , kills the process and all its childs
- * What to do if it kills the running Process? It calls dispatch
- * How to check if it kills the running Process? It uses the global variable runningPcb , setting it to NULL if it kills it
+ * If the process terminated is the current running Process it calls dispatch.
  */
 int terminateProcess(void * pid){
 	if(pid==NULL) pid=runningPcb;
@@ -140,47 +139,47 @@ int terminateProcess(void * pid){
  * and will loaded the state in the 'new' area.
  * Can be set only once a time for a process
  * Types can be:
-    - 0 (SYSCALL/breakpoint)
-    - 1 (TLB trap)
-    - 2 (Program trap)
+ *  - 0 (SYSCALL/breakpoint)
+ *  - 1 (TLB trap)
+ *  - 2 (Program trap)
  * Returns 0 in case of success, -1 in case of failure.
-*/
+ */
 int specifyTrapHandler(int type, state_t *old, state_t *new) {
   switch (type) {
     case SPECSYSBP:
-        //if currentProcess' areas are clean
+        /* If currentProcess' areas are clean */
         if (runningPcb->sysbk_new == NULL && runningPcb->sysbk_old == NULL) {
-            //set areas
+            /* set areas*/
             runningPcb->sysbk_new = new;
             runningPcb->sysbk_old = old;
         }
-        //else if are not clean are already set, failure! Return -1
+        /* else if are not clean are already set, failure! Return -1 */
         else {
             return -1;
         }
         break;
 
     case SPECTLB:
-        //if currentProcess' areas are clean
+        /* if currentProcess' areas are clean */
         if (runningPcb->tlb_new == NULL && runningPcb->tlb_old == NULL) {
-            //set areas
+            /* set areas */
             runningPcb->tlb_new = new;
             runningPcb->tlb_old = old;
         }
-        //else if are not clean are already set, failure! Return -1
+        /* else if are not clean are already set, failure! Return -1 */
         else {
             return -1;
         }
         break;
 
     case SPECPGMT:
-        //if currentProcess' areas are clean
+        /* if currentProcess' areas are clean */
         if (runningPcb->pgmtrap_new == NULL && runningPcb->pgmtrap_old == NULL) {
-            //set areas
+            /* set areas */
             runningPcb->pgmtrap_new = new;
             runningPcb->pgmtrap_old = old;
         }
-        //else if are not clean are already set, failure! Return -1
+        /* else if are not clean are already set, failure! Return -1 */
         else {
             return -1;
         }
@@ -189,7 +188,7 @@ int specifyTrapHandler(int type, state_t *old, state_t *new) {
     default:
       return -1;
   }
-  return 0; //Success!
+  return 0; /* Success! */
 }
 
 /* SYSCALL 6, returns times of current running processes
@@ -219,9 +218,7 @@ void getTimes(cpu_t *user, cpu_t *kernel, cpu_t *wallclock) {
 /* SYSCALL 7: Stops the current running process and adds it to the pseudoClockSem*/
 
 void waitForClock(){
-
-    P(&pseudoClockSem); /* If the function is this short, we could include this line directly into
-                           the Syshandler */
+    P(&pseudoClockSem); 
 }
 
 /*  Helper function for syscall 8 , given a register it calculates both its interrupt Line and its device number
@@ -230,7 +227,7 @@ void waitForClock(){
  */
 
 void getDeviceFromRegister(int * intLine , int * devNo, int * termIO, unsigned int *comm_device_register){
-    /* Calculates the base dtpreg_t from the formula  "comm_device_register=devreg+sizeof(unsigned it)" */
+    /* Calculates the base dtpreg_t from the formula  "comm_device_register=devreg+sizeof(unsigned int)" */
     unsigned int devAddrCalculated= (memaddr)comm_device_register - WS;
     /* Given the addres of the devreg we can calculate both the intline and the devNo from the formula "devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)" 
      * where baseIntLineSize will be the "0x80" and baseOffset the "0x40", these are both declared to improve readability 
@@ -239,7 +236,7 @@ void getDeviceFromRegister(int * intLine , int * devNo, int * termIO, unsigned i
     unsigned int baseOffset=DEV_REG_START;
     *intLine= ((devAddrCalculated-baseOffset)/baseIntLineSize)+INT_LOWEST;
     *devNo= ((devAddrCalculated-baseOffset)%baseIntLineSize) / DEV_REG_SIZE;
-    *termIO= -1; //Dummy value assigned just to not have a pointer to NULL in case intLine is not 7
+    *termIO= -1; /* Dummy value assigned just to not have a pointer to NULL in case intLine is not 7 */
     if (*intLine==7){
     /* if the Interrupt Line is 7, the register belongs to a Terminal, we need to check if its input or output
      *      if its input(RECV) the devAddrCalculated should be equal to its actual address, so we check it against the formula "devAddrBase=0x40+((Intline-3)*0x80)+(DevNo*0x10)" and set the termIO accordingly
@@ -302,26 +299,17 @@ void getPids(void **pid, void **ppid) {
 void waitChild() {
     if (runningPcb->p_first_child != NULL) /* No need to wait if there are no children */
     {
-#if 0
-        int c_sem = 1;  // verificare che questa dichiarazione non possa verificare casi di dangling references
-        Andrea: it's a conditional semaphore, not a mutex one; it's initial value is 0
-#endif
-#if 0
-        int c_sem = 0;  // verificare che questa dichiarazione non possa verificare casi di dangling references
-        /* Si', crea dangling reference. Ho aggiunto un campo al pcb */
-#endif
         runningPcb->childSem = 0;
         runningPcb->waitingForChild = 1;    /* This will be used later to tell wether this process were waiting for a child to end  */
         P(&runningPcb->childSem);                          /* Suspend the process */
     }
-    /* perform extra work when the process resumes  */
 }
 
 void pgmTrapHandler(){
     /* 
-     *   Checks if a SYS5 has been called for the current process (The one who triggered the pgmTrap)
-     *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
-     *      If its not , calls SYS2 to abort the process
+     *   Checks if a SYS5 has been called for the current process (The one who triggered the pgmTrap) with the passup fuction
+     *       If it is defined, the function will handle the passup
+     *       If its not , calls SYS2 to abort the process
      */
 
     /* Accounting user times when the process has stopped */
@@ -335,9 +323,9 @@ void pgmTrapHandler(){
 
 void tlbHandler(){
     /* 
-     *   Checks if a SYS5 has been called for the current process (The one who triggered the tlb)
-     *       If it is defined, copies the content of the OLDAREA into the processes oldarea and loads the new area
-     *      If its not , calls SYS2 to abort the process
+     *   Checks if a SYS5 has been called for the current process (The one who triggered the tlb) with the passup fuction
+     *       If it is defined, the function will handle the passup
+     *       If its not , calls SYS2 to abort the process
      */
 
     /* Accounting user times when the process has stopped */
@@ -354,17 +342,22 @@ void sysHandler(){
     /*
         * Gets the newarea and checks the cause of the exception
         *   If Breakpoint:
-        *       Passes it up to the higer level hander if present, if not declared terminates the pocess
+        *       Sets the corresponding flags so it will passup the function to the corresponding higher level handler
         *   If SYSCALL:
         *       Checks if the process is running in system(kernel) mode, if positive            
         *           Gets the syscall number stored in the a1 register of SYSBK_NEWAREA
         *           According to the number it calls the appropriate function.
-        *           If the value is >10 sends it to the corresponding higher level handler, if there isnt one terminates the process
+        *           If the value is >10 Sets the corresponding flags so it will passup the function to the corresponding higher level handler
         *       If not the process is running in user mode!
         *           Checks if its trying to use a reserved syscall <=10
-        *               If yes, send it to the   PgmTrap handler with the error code EXC_RESERVEDINSTR
-        *               if not, sends it to the corresponding higher level handler, if there isnt one terminates the process
-    */
+        *               If yes, Sets the passup handler to the PgmTrap handler with the error code EXC_RESERVEDINSTR
+        *               if not, Sets the corresponding flags so it will passup the function to the corresponding higher level handler
+        * Handles the exit point of the function by checking the flags
+        *	If the passup flag is set to 1 , it passes up to the handler saved in passupHandler
+        *	Else it checks if there is a runningprocess
+        *		if there is one it restores the one who called the SYSCALL
+        *		else it calls dispatch 
+        */
 
     state_t *userRegisters = (state_t*) SYSBK_OLDAREA;
     pcb_t *processThrowing = runningPcb;
@@ -378,18 +371,23 @@ void sysHandler(){
 
     /* Checks the cause */
     if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_BREAKPOINT){
-        /*Breakpoint, sets the appropriate flags , it will be handled later*/
+        /* It's a Breakpoint, sets the appropriate flags , it will be handled later*/
         passupFlag=1;
         passupHandler= (state_t*)SYSBK_OLDAREA;
     }
+
     else if(CAUSE_EXCCODE_GET(userRegisters->CP15_Cause) == EXC_SYSCALL){
-        /*  SYScall
+        /*  It's a SYScall
          *  Checks if the process is running in system mode 
          */
+
         if (GET_STATUS_MODE(userRegisters->cpsr) == STATUS_SYS_MODE){
             /* If yes it handles the syscall selecting which one to call and passing the correct parameters */
+            
             int succesful=5; /* Helper integer that will store if the syscall has ended correctly for those who return something, initialized to an impossible value so the checks cant uncorrectly pass*/
+            
             switch(userRegisters->a1){
+
                 case CREATEPROCESS:
                     /*  a2 should contain the physical address of a processor state area at the time this instruction is executed and a3 should contain the priority level
                      *  if it returns error it means that you cant allocate more processes, puts -1 in the return register
@@ -397,6 +395,7 @@ void sysHandler(){
                     succesful=createProcess((state_t *)userRegisters->a2 , (int) userRegisters->a3,(void **) userRegisters->a4);
                     if (succesful==-1) userRegisters->a1=-1;
                     break;
+                
                 case TERMINATEPROCESS:
                     /* a2 should contain the value of the designated process’ PID */
                     succesful=terminateProcess( (void *)userRegisters->a2 );
@@ -405,34 +404,36 @@ void sysHandler(){
                         PANIC();
                     }
                     break;
+
                 case SEMP:
                     /* a2 should contain the physical address of the semaphore to be P’ed */
                     P((int*) userRegisters->a2);
                     break;
+
                 case SEMV:
                     /* a2 should contain the physical address of the semaphore to be V’ed */
                     V((int*)userRegisters->a2,(state_t *)SYSBK_OLDAREA);
                     break;
+
                 case SPECHDL:
                     /*
                      *  a2 should contain which handler it will modify, a3 should contain a pointer to the old state, and a4 a pointer to the new state.
                      *  if the syscall returns error means that SYS5 was called more than once on the process, its not allowed so it should be treatead as a SYS2 instead
                      */
                     succesful=specifyTrapHandler((int)userRegisters->a2, (state_t *)userRegisters->a3, (state_t *)userRegisters->a4);
-#if 0
-                    if (succesful==-1) terminateProcess(runningPcb);
-                    /* Andrea: minor error, 1 argument missing Igor: Redundant, if terminateProcess doesent get any argument it will default to the runningPbc, I think it would be more elegant this way*/
-#endif
                     if (succesful==-1) terminateProcess(runningPcb);
                     break;
+
                 case GETTIME:
-                    // Retrieves and returns the cpu times putting them in the appropriate return registers */
+                    /* Retrieves and returns the cpu times putting them in the appropriate return registers */
                     getTimes((cpu_t *)userRegisters->a2, (cpu_t *)userRegisters->a3, (cpu_t *)userRegisters->a4);
                     break;
+
                 case WAITCLOCK:
                     /* No arguments necessary, it just calls the appropriate function */
                     waitForClock();
                     break;
+
                 case IODEVOP:
                     /* a2 should contain the command and a3 should contain the device_command_register the command needs to be put into */
                     succesful=ioOperation((unsigned int) userRegisters->a2, (unsigned int *)userRegisters->a3);
@@ -441,11 +442,13 @@ void sysHandler(){
                         PANIC();
                     }
                     break;
+
                 case GETPIDS:
                     getPids((void **)userRegisters->a2, (void **)userRegisters->a3);
                     break;
+
                 case WAITCHLD:
-                    // No arguments necessary, it just calls the appropriate function */
+                    /* No arguments necessary, it just calls the appropriate function */
                     waitChild();
                     break;
                 default:
@@ -457,11 +460,13 @@ void sysHandler(){
                     break;
             }
         }
+
         else{
-            /*  It was not running in kernel mode
+            /*  Its running in user Mode
+             *  Sets the passupFlag to 1
              *  Checks if its trying to run a reserved syscall (<=10)
-             *      If yes, send it to the   PgmTrap handler with the error code EXC_RESERVEDINSTR
-             *      if not, sends it to the corresponding higher level handler, if there isnt one terminates the process
+             *      If yes, sets the passup adress to the PgmTrap handler with the error code EXC_RESERVEDINSTR
+             *      if not, sets the passup adress to the higher level handler
              */
             passupFlag=1;
             if(userRegisters->a1 <= 10){
@@ -474,7 +479,8 @@ void sysHandler(){
             }
         }
     }
-  /*Passup or dispatch handler, 
+  
+  /* Passup or dispatch handler, 
    *	If the flag is set to 1 , it passes up to the handler saved in passupHandler
    *	Else it checks the runningprocess
    *		if there is a running process it restores the one who called the SYSCALL
@@ -489,9 +495,7 @@ void sysHandler(){
     else{
         kernelTimeAccounting(((state_t *) SYSBK_OLDAREA) ->TOD_Hi, ((state_t *) SYSBK_OLDAREA)
                 ->TOD_Low,processThrowing);
-	    if(runningPcb!=NULL){
-		    restoreRunningProcess(userRegisters);
-	    }
-	    else{ dispatch(NULL);}
+	    if(runningPcb!=NULL){ restoreRunningProcess(userRegisters); }
+	    else{dispatch(NULL);}
     }
 }

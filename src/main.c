@@ -9,9 +9,9 @@
 #include <libuarm.h>
 #include <asl.h>
 
-// ready processes list
+/* Ready processes list */
 pcb_t *readyQueue;
-// Current running process
+/* Current running process */
 pcb_t *runningPcb;
 
 int pseudoClockSem;  /* Semaphore for the pseudoclock. */
@@ -31,8 +31,8 @@ void initFirstPCB() {
     state_t p_s = {
         .sp = RAM_TOP - FRAMESIZE,
         .pc = (memaddr) test,
-        .cpsr = STATUS_ALL_INT_ENABLE(STATUS_SYS_MODE),     // kernel mode
-        .CP15_Control = CP15_CONTROL_NULL                   // VM disabled
+        .cpsr = STATUS_ALL_INT_ENABLE(STATUS_SYS_MODE),     /* kernel mode */
+        .CP15_Control = CP15_CONTROL_NULL                   /* VM disabled */
     };
 
     createProcess(&p_s, 0, NULL);
@@ -78,16 +78,16 @@ void initDataStructures() {
 }
 
 void init() {
-    // init NEW areas for interrupts and traps
+    /* init NEW areas for interrupts and traps */
     initHandler(INT_NEWAREA, (memaddr) interruptHandler);
     initHandler(TLB_NEWAREA, (memaddr) tlbHandler);
     initHandler(PGMTRAP_NEWAREA, (memaddr) pgmTrapHandler);
     initHandler(SYSBK_NEWAREA, (memaddr) sysHandler);
 
-    // init PHASE1's data structures
+    /* init PHASE1's data structures */
     initDataStructures();
 
-    // init nucleus variables
+    /* init nucleus variables */
     initVars();
 
     initFirstPCB();
@@ -98,7 +98,7 @@ int main() {
     init();
 
     dispatch(NULL);
-    // end of the nucleus initialization
+    /* end of the nucleus initialization */
 
     return 0;
 }

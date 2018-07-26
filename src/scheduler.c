@@ -11,21 +11,21 @@
 void dispatch(state_t *to_save)
 {
     /*
-        Check if there are processes in the ready queue.
-            If there are
-                remove the first one and put it in a variable
-                check if there is a running process.
-                If there is one
-                    insert it in the ready queue
-                set the running process to the removed one
-                update the interval Timer
-                Save the time of loading
-                Load the running process
-            Else
-                check if there could be a deadlock
-                if so, halt
-                else, wait for an interrupt
-   */
+     *   Check if there are processes in the ready queue.
+     *      If there are
+     *          remove the first one and put it in a variable
+     *          check if there is a running process.
+     *          If there is one
+     *              insert it in the ready queue
+     *          set the running process to the removed one
+     *          update the interval Timer
+     *          Save the time of loading
+     *          Load the running process
+     *      Else
+     *          checks if there could be a deadlock or if its time for a shutdown
+     *          if so, halts
+     *          else, wait for an interrupt
+     */
     if (readyPcbs > 0)
     {
         pcb_t *p;
@@ -63,14 +63,13 @@ void dispatch(state_t *to_save)
 pcb_t *suspend()
 {
     /*
-        If there is a running process, 
-            save it into a variable
-            restore its original priority
-            set the running process to null
-            return the process
-        else
-            return NULL
-            
+     *  If there is a running process, 
+     *      save it into a variable
+     *      restore its original priority
+     *      set the running process to null
+     *      return the process
+     *  else
+     *      return NULL      
      */
     if (runningPcb != NULL)
     {
@@ -112,8 +111,8 @@ int insertInReady(pcb_t *p, state_t *to_save)
         readyPcbs++;
         if (runningPcb != NULL && (p->p_priority > runningPcb->p_priority || flag)) 
             /*
-                The second part of the or is used when, during the dipatch function, the running
-                process needs to be stopped and saved
+             * The second part of the or is used when, during the dipatch function, the running
+             *  process needs to be stopped and saved
              */
         {
             pcb_t *q = suspend(); /* Points to the pcb of the process running before this function

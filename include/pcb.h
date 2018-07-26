@@ -7,7 +7,7 @@
 #include  <const.h>
 
 
-//pcb_t struct as defined in specifications
+/* pcb_t struct as defined in specifications */
 
 typedef struct pcb_t {
 	struct pcb_t *p_next;           /* Process' successor in the list it's in*/
@@ -21,12 +21,12 @@ typedef struct pcb_t {
     int waitingOnIO;                /* Used to count the number of softblocked processes */
     int childSem;                   /* Used to wait on a child */
     int waitingForChild;            /* True if the process is waiting for a child to end */
-	//process times
+	/* Process times */
     cpu_t usertime; 				/* Process' time spent in user mode */
     cpu_t kerneltime;				/* Process' time spent in kernel mode */
 	cpu_t lasttime;					/* Last TOD marker. We use it for keep track of last activation/deactivation */
     cpu_t wallclocktime;			/* Process' TOD when starting. Used for calculating total wallclocktime  */
-	//trap handlers
+	/* Trap handlers */
 	state_t *sysbk_new;
 	state_t *sysbk_old;
 	state_t *tlb_new;
@@ -37,27 +37,23 @@ typedef struct pcb_t {
 
 
 /*
- *
+ * 
  */
 pcb_t *pcbFree_h;
 
 /*
- *
+ * 
  */
 pcb_t pcbFree_table[MAXPROC];
 
 
 /*
- * Inizializza la lista in modo da contenere tutti gli elementi
- * della pcbFree_table. Deve essere chiamato una sola volta in
- * fase di inizializzazione dei dati.
+ * Initializes the list so it contains all the elements of pcbFree_table.
+ * It has to be called only one time, when the data is being initialized.
  */
 void initPcbs();
 
-/*
- * Inserisce il PCB puntato da p nella lista dei PCB liberi
- * (pcbFree)
- */
+/* Inserts the pointed PCB passed by parameted in the freePCB list */
 void freePcb(pcb_t *p);
 
 /*

@@ -2,31 +2,27 @@
 #include  <list.h>
 
 semd_t semd_table[MAXSEMD];
-// Head of the list of free semaphore descriptors
+/* Head of the list of free semaphore descriptors */
 semd_t *semdFree_h;
-// Semaphores descriptors hash table
+/* Semaphores descriptors hash table */
 semd_t *semdhash[ASHDSIZE];
 
-/*
-   Returns the hash address for the given key
-*/
+/* Returns the hash address for the given key */
 int hash(int* key);
 
 /*
-   Given a hashtable bucketlist, returns the address of the entry containing the semaphore identified by key if present,
-   NULL otherwise
-*/
+ * Given a hashtable bucketlist, returns the address of the entry containing the semaphore identified by key if present,
+ * NULL otherwise
+ */
 semd_t *hashentry(semd_t *bucketlist,int *key);
 
-/*
-   Removes the given entry from the given bucketlist, if present
-*/
+/*  Removes the given entry from the given bucketlist, if present */
 void removeEntry(semd_t **bucketlist,semd_t *entry);
 
 /*
-   Adds all the semaphore descriptors in semdtable with index greater or equalt to i to the freeSemd list.
-   Also initializes the asht to be empty.
-*/
+ * Adds all the semaphore descriptors in semdtable with index greater or equalt to i to the freeSemd list.
+ * Also initializes the asht to be empty.
+ */
 void fillFreeSemd(int i);
 
 /* If the queue of the semaphore descriptor pointed by entry is empty removes entry from the hash table and returns it
@@ -37,14 +33,14 @@ void hashCleanup(semd_t *entry,int ind);
 int insertBlocked(int *key,pcb_t *p)
 {
     /*
-       - calculate key hash
-       - if the table entry is empty or does not contain the given key
-          - if the freeSemds queue is not empty
-              - allocate a new semaphore and insert in the table
-          - else return -1
-       - else insert p in the queue of key
-       - return 0
-    */
+     * - calculate key hash
+     * - if the table entry is empty or does not contain the given key
+     *    - if the freeSemds queue is not empty
+     *        - allocate a new semaphore and insert in the table
+     *    - else return -1
+     * - else insert p in the queue of key
+     * - return 0
+     */
     if(p->p_semKey == NULL) // quick check if p is already blocked on another semaphore
     {
         int ind = hash(key);
@@ -58,7 +54,7 @@ int insertBlocked(int *key,pcb_t *p)
                 semdFree_h = semdFree_h->s_next;    
                 new->s_key = key;
                 new->s_procQ = NULL;
-                new->s_next = semdhash[ind]; // Adding the semaphore descriptor to the bucket list 
+                new->s_next = semdhash[ind]; /* Adding the semaphore descriptor to the bucket list */
                 semdhash[ind] = new;
 
                 entry = new;
@@ -157,14 +153,14 @@ int hash(int *key)
     double n = ((int)key)*HASH_MULT_CONST;
     return (int)(ASHDSIZE*(n - ((int)n))) % ASHDSIZE;
    /*
-DISCLAIMER: the modulo operation shouldn't be necessary: x - floor(x) is a number
-greater than or equal to 0 and less than 1, so the number floor(m*(iC - floor(iC)))
-should be between 0 and m - 1, with m being ASHDSIZE, C being HASH_MULT_CONST and
-i being the key.  However it seems like this calculation sometimes yields numbers
-greater or equal to ASHDSIZE, which is obviously wrong. Now, the modulo operation
-at the end patches this problem, but it's not an optimal solution.  Still it
-should provide a uniform distribution of the keys.
-      */
+    * DISCLAIMER: the modulo operation shouldn't be necessary: x - floor(x) is a number
+    * greater than or equal to 0 and less than 1, so the number floor(m*(iC - floor(iC)))
+    * should be between 0 and m - 1, with m being ASHDSIZE, C being HASH_MULT_CONST and
+    * i being the key.  However it seems like this calculation sometimes yields numbers
+    * greater or equal to ASHDSIZE, which is obviously wrong. Now, the modulo operation
+    * at the end patches this problem, but it's not an optimal solution.  Still it
+    * should provide a uniform distribution of the keys.
+    */
 }
 
 void removeEntry(semd_t **bucketlist,semd_t *entry)
