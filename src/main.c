@@ -103,7 +103,3 @@ int main() {
     return 0;
 }
 
-#ifdef DEBUG
-void debug() {}
-int debug1;
-#endif // DEBUG
