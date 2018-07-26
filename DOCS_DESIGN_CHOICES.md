@@ -157,3 +157,10 @@ The old area to save the process' state at the time of the trap and the new area
 in response to the trap need to be specified.
 
 This syscall returns 0 in case of success, -1 otherwise.
+
+### SYS6: Get times
+
+This syscall returns the current process' times spent in user mode, in kernel
+mode and the total wallclock time count from the first start.
+
+### SYS 7: Wait for clock
