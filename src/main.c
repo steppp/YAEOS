@@ -59,9 +59,6 @@ void initVars() {
 
     for (i = 0; i < DEV_PER_INT; i++)
         terminals[DEV_PER_INT][0] = terminals[DEV_PER_INT][1] = 0;
-
-    clockStartLO = getTODLO();
-    clockStartHI = getTODHI();
 }
 
 void initHandler(memaddr addr, memaddr handler) {
@@ -97,9 +94,11 @@ void init() {
 int main() {
     init();
 
+    clockStartLO = getTODLO();
+    clockStartHI = getTODHI();
+
     dispatch(NULL);
     /* end of the nucleus initialization */
 
     return 0;
 }
-

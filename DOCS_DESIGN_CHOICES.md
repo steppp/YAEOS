@@ -211,18 +211,19 @@ variables, and NEW areas for interrupts and traps as well as the creation of the
 
 First of all, NEW areas for interrupts and traps are initialized following the specification.
 For each interrupt and trap there's a constant which points to the address of the NEW area
-that will be loaded every time that interrupt or trap is risen. A function handler for each
+that will be loaded every time that interrupt or trap is raised. A function handler for each
 interrupt or trap is specified, and its address is stored in the program counter variable of the
 NEW area. The stack pointer value is set ro RAM_TOP, all interrupts are disabled and the
 execution mode is set to privileged.
 
-The pcbFree list and the ASL are initialized using the default methods. Before the initialization
-of the first PCB, the other variables are set with the default values. These variables are the
-amount of PCBs in the ready queue, blocked on different devices and the number of total active
-ones.  Pseudoclock ticks count, aging ticks count are set to zero and the pseudoclock semaphore
-is initialized to zero. All values in the interrput lines arrays are set to zero. The two variables which
-represent the high and low part of the TOD when the clock start are initialized using the values
-returned by getTODLO() and getTODHI().
+The pcbFree list and the ASL are initialized using the default methods. Before the initialization of
+the first PCB, the other variables are set with the default values. These variables are the number
+of PCBs in the ready queue, blocked on devices semaphores for I/O and the number of active onesi
+(that is not softblocked).  Pseudoclock ticks count, aging ticks count are set to zero and the
+pseudoclock semaphore is initialized to zero. All the devices semaphores are set to zero. The two
+variables which represent the high and low part of the TOD when the initialization is done are set
+using the values returned by getTODLO() and getTODHI(). These values are useful to set the
+pseudoclock and aging ticks.
 
 The last action to be performed before the schduler is called is the initialization of the first PCB.
 All variables except for the state variable will contain the default values. The state of the PCB is
@@ -233,6 +234,5 @@ the CP15 coprocessor are set to zero to disable the virtual memory. The createPr
 invoked to finally create the first PCB.
 
 The last action performed by the nucleus is the call to the dispatch function of the scheduler.
-From this point onward the execution flow will never return to the nucleus and the operating system
-is, at this point, actually started.
-
+From this point onward the execution flow will return to the nucleus only when an interrupt occurs
+or a trap is raised, and the operating system is, at this point, actually started.
