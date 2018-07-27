@@ -1,4 +1,4 @@
-% Documentation and design choices for Yaeos
+% Documentation and design choices for YAEOS
 % Andrea Berlingieri;Stefano Andriolo;Federico Rachelli;Igor Ershov
 % A.A. 2017/2018
 
@@ -9,46 +9,47 @@
 
 ### Pcb List
 
-The pcb list is kept using a series of recursive functions.  
+The pcb list is maintained using a series of recursive functions.  
 
-The function used to inster a new process in the queue is called insertprocQ. Firstly it checks if there 
-are elements in the queue, replacing the head if there are none, then it checks if the new process has a 
-higher priority than the head, and places it before if its has , or it proceeds recursevly on the list if not.  
+The function used to insert a new process in the queue is called insertProcQ. Firstly it checks if there 
+are elements in the queue. If there are none the head of the queue is set to be the given pcb. If
+that's not the case it checks if the new process has a higher priority than the head, and places it
+before it if it does, else it proceeds recursively on the rest of the list (ignoring the head).
 
-With headProcQ you can get the first element of the list, without removing it, to also remove it you can use
+With headProcQ you can get the first element of the list, without removing it. To also remove it you can use
  removeProcQ instead.  
-You can remove a specific process using outProcQ. This function will check the head of the list against the 
-desired process, if its a match it will remove and return it , else it will proceed recursevly on the next 
-element on the list.  
 
-To apply a function to all the processes in the list you can use forallProcQ, it will run the function against
- the first element of the list and proceed recursevly on the next one.
+You can remove a specific process using outProcQ. This function will check the head of the list against the 
+desired process. If it's a match it will remove and return it, else it will proceed recursively on
+the rest of the list.
+
+To apply a function to all the processes in the list you can use forallProcQ. It will run the given
+function against the first element of the list and then proceed recursively on the rest of the list.
 
 ### Free Pcb List
 
-Its a list of free pcbs and its kept using a series of recursive functions.  
+It's a list of free pcbs ready to be allocated at need and it's maintained using a series of
+recursive functions.  
 
-With freePcb the pcb passed as an argument is made the head of the list.    
+With freePcb the pcb passed as an argument is "deallocated" and made to be the head of the list.    
 With initPcbs the list will be initialized to contain all the elements of the pcbFree_table. This function 
-will be called only once when the data is being initialized.  
-With allocPcb a new pbc with all the parameters set to null will be created and will be made the head of the
- free pcb list.  
+will be called only once when the kernel variable are being initialized.  
+With allocPcb a new pbc with all the parameters set to null will be allocated from the free list. 
 
 ### Tree
 
 ### Pcb Tree
 
-Each Pcb is a node of the tree of Pcbs. That is needed for keep the processes' hierarchy. 
+Each Pcb is a node in a tree of Pcbs. That is needed for keep the processes' hierarchy. 
 Each Pcb has a pointer for his parent, his sibling and his first child.
 
-The function used for insert a child in a node's hierarchy is insertChild. 
-The specified pcb to insert becomes the last sibling of the first child of the parent (that's done by the _addAsLastSibl facility by a recursive function).
+The function used to insert a child in a node's hierarchy is insertChild. 
+The pcb to insert becomes the last children of the parent (the first if the parent has no child at
+the moment of the call of insertChild). That's done by the _addAsLastSibl facility by a recursive function).
 
 The function for removing the first child of a node is removeChild.
 
-The function for removing an arbitrary child of a node is outChild. It use a recursive facility for obtaining the previous sibling of the specified node.
-
-
+The function for removing an arbitrary child of a node is outChild. It uses a recursive facility for obtaining the previous sibling of the specified node.
 
 ### Active Semaphore Hash Table
 
@@ -60,11 +61,11 @@ mantained in a hash table.
 There is a fixed number of semaphore descriptors, each of which is statically allocated in the
 kernel and, if not being used at the moment, is kept in a list of available descriptors, that can be
 used when a semaphore descriptor is needed. This means that there's a limit to the number of total
-semaphores that can be used concurrently.
+semaphores that can be used simultaneously.
 
 A semaphore's value is contained in the integer variable associated with it, and a semaphore is
 identified by the address of that same variable. This address is used as an argument to the hash
-function to retrieve its semaphore descriptor in an efficient way.
+function to retrieve its semaphore descriptor from the hash table in an efficient way.
 
 The chosen hash function is the multiplicative hash. Despite the computational cost due to the
 multiplication, this function has the pro of being independent of the size of the hash table. The
@@ -74,6 +75,11 @@ situations.
 The queue of PCBs blocked on a semaphore is a priority queue and the hashtable is a chained hash
 table with linked lists.
 
+It's possible, using a series of functions of the semaphore module, to block a process on a
+semaphore, to unblock it, to retrieve or to retrive and remove the head of a queue of blocked
+processes, to remove a process from any queue it's blocked on and to apply a function to all the
+processes blocked on a semaphore. Finally a function to initialize the hashtable with empty linked
+lists is available. All of these functions are recursive.
 
 ---
 
@@ -208,10 +214,12 @@ the function will return a failure.
 ## Syscalls 
 
 Syscalls are managed by sysHandler() function. 
-Each syscall are handled differently. Specifications in code for more information about how a single syscall is managed.
-sysHandler() function also manages syscalls >= 10 and breakpoints raising.
+Each syscall is handled differently by a helper function. Check the code for more
+information about how a given syscall is managed. The sysHandler() function also manages syscalls >=
+10 and breakpoints handling.
 
 ### SYS1: Create process
+
 Tries to allocate a new pcb for a new process. If succesful it sets its fields appropriately and
 returns 0, else returns -1.
 
@@ -299,7 +307,7 @@ of creating a new global semaphore for each process.
 ---
 
 
-## Initialization nucleus
+## Nucleus initialization 
 
 The first operations executed by the kernel are the initialization of data structures,
 variables, and NEW areas for interrupts and traps as well as the creation of the first PCB.
