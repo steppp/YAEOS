@@ -1,20 +1,9 @@
----
-title: Documentation and design choices for Yaeos
-author:
-- name: Andrea Berlingieri
-  email: andrea.berlingieri@studio.unibo.it
-  matricola: 0000788959
-- name: Stefano Andriolo
-  email: stefano.andriolo3@studio.unibo.it
-  matricola: 0000801172
-- name: Federico Rachelli
-  email: federico.rachelli@studio.unibo.it
-  matricola: 0000789342
-- name: Igor Ershov
-  email: igor.ershov@studio.unibo.it
-  matricola: 0000789525
-...
+% Documentation and design choices for Yaeos
+% Andrea Berlingieri;Stefano Andriolo;Federico Rachelli;Igor Ershov
+% A.A. 2017/2018
 
+
+\pagebreak
 
 ## Data structures
 
@@ -22,20 +11,30 @@ author:
 
 The pcb list is kept using a series of recursive functions.  
 
-The function used to inster a new process in the queue is called insertprocQ. Firstly it checks if there are elements in the queue, replacing the head if there are none, then it checks if the new process has a higher priority than the head, and places it before if its has , or it proceeds recursevly on the list if not.  
-Y
+The function used to inster a new process in the queue is called insertprocQ. Firstly it checks if there 
+are elements in the queue, replacing the head if there are none, then it checks if the new process has a 
+higher priority than the head, and places it before if its has , or it proceeds recursevly on the list if not.  
 
-With headProcQ you can get the first element of the list, without removing it, to also remove it you can use removeProcQ instead.  
+With headProcQ you can get the first element of the list, without removing it, to also remove it you can use
+ removeProcQ instead.  
+You can remove a specific process using outProcQ. This function will check the head of the list against the 
+desired process, if its a match it will remove and return it , else it will proceed recursevly on the next 
+element on the list.  
 
-You can remove a specific process using outProcQ. This function will check the head of the list against the desired process, if its a match it will remove and return it , else it will proceed recursevly on the next element on the list.  
-
-To apply a function to all the processes in the list you can use forallProcQ, it will run the function against the first element of the list and proceed recursevly on the next one.
+To apply a function to all the processes in the list you can use forallProcQ, it will run the function against
+ the first element of the list and proceed recursevly on the next one.
 
 ### Free Pcb List
 
 Its a list of free pcbs and its kept using a series of recursive functions.  
 
-With freePcb the pcb passed as an argument is made the head of the list.  
+With freePcb the pcb passed as an argument is made the head of the list.    
+With initPcbs the list will be initialized to contain all the elements of the pcbFree_table. This function 
+will be called only once when the data is being initialized.  
+With allocPcb a new pbc with all the parameters set to null will be created and will be made the head of the
+ free pcb list.  
+
+### Tree
 
 
 
@@ -164,22 +163,34 @@ duration of a timeslice. If the aging tick is also too far in the future to worr
 timer is set to the timeslice duration and the cause is set accordingly.
 
 ---
+
 ## Handlers
 
 ### Pgm Trap Handler
-Tries to passup the trap to a higher level handler using the passup function , if its unsuccesful it terminates the process and dispatches a new one.
+Tries to passup the trap to a higher level handler using the passup function , if its unsuccesful it
+ terminates the process and dispatches a new one.
 
 ### Tlb Handler
-Tries to passup the tlb to a higher level handler using the passup function , if its unsuccesful it terminates the process and dispatches a new one.
+Tries to passup the tlb to a higher level handler using the passup function , if its unsuccesful it
+ terminates the process and dispatches a new one.
 
 ### Syscall and Breakpoint Handler
-The YAEOS Syscall and breakpoint handler only supports the first 10 syscalls for processes in kernel mode, if the cause of the exception is a breakpoint or the process is in user mode it tries to pass it to a higher level handler, or a pgm trap handler with the cause "Reserved Instruction" if the process in user mode tries to use a reserved syscall, using the passup function and if unsuccesful it terminates the process and dispatches a new one.
-If the process is in kernel mode and the exception is a syscall the handler checks which syscall is being called, sets the appropriate parameters to the respective function and calls it, storing any return values in the "a" registers of the process.
-If the handler completes its job succesfully without passing up, it restores the caller if there is a running process, or it dispatches a new one if there isn't.
+The YAEOS Syscall and breakpoint handler only supports the first 10 syscalls for processes in kernel
+ mode, if the cause of the exception is a breakpoint or the process is in user mode it tries to pass 
+it to a higher level handler, or a pgm trap handler with the cause "Reserved Instruction" if the process 
+in user mode tries to use a reserved syscall, using the passup function and if unsuccesful it terminates 
+the process and dispatches a new one.
+If the process is in kernel mode and the exception is a syscall the handler checks which syscall is being 
+called, sets the appropriate parameters to the respective function and calls it, storing any return values
+ in the "a" registers of the process.
+If the handler completes its job succesfully without passing up, it restores the caller if there is a running
+ process, or it dispatches a new one if there isn't.
 
 
 ### Passup helper function 
-Checks if the process has a higher level handler stored in its corrisponding new area (sysbk, tlb or pgmtrap), if there is one the current state will be saved in the old area and the new area will be loaded, if there isn't the function will return a failure.
+Checks if the process has a higher level handler stored in its corrisponding new area (sysbk, tlb or pgmtrap)
+, if there is one the current state will be saved in the old area and the new area will be loaded, if there isn't 
+the function will return a failure.
 
 ---
 ## Syscalls 
@@ -249,8 +260,11 @@ unlocked after the next clock tick.
 
 ### SYS8: I/O Operation 
 
-Activates the I/O operations copying the command in the appropriate command device register. The caller will be suspended and appended to the appropiate semaphore (using a normalDevice semaphore if the interupt Line is not 7 or a terminal semaphone if =7)  
-The device register and interrupt line are calculated using a helper function which uses pointer offsets, basing its calculations on derivatitons of the formula "```devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)```".
+Activates the I/O operations copying the command in the appropriate command device register. The caller will 
+be suspended and appended to the appropiate semaphore (using a normalDevice semaphore if the interupt Line is 
+not 7 or a terminal semaphone if =7)  
+The device register and interrupt line are calculated using a helper function which uses pointer offsets, basing 
+its calculations on derivatitons of the formula "```devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)```".
 
 ### SYS9: Get Pid
 
