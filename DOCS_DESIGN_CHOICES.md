@@ -22,7 +22,7 @@ author:
 
 The pcb list is kept using a series of recursive functions.  
 
-The function used to inster a new process in the queue is called insertprocQ. Firstly it checks if there are elements in the queue, replacing the head if there are none, then it checks if the new process has a higher priority than the head, and places it before if its has , or it proceeds recursevly on the list if not.  
+The function used to insert a new process in the queue is called insertprocQ. Firstly it checks if there are elements in the queue, replacing the head if there are none, then it checks if the new process has a higher priority than the head, and places it before if its has , or it proceeds recursevly on the list if not.  
 Y
 
 With headProcQ you can get the first element of the list, without removing it, to also remove it you can use removeProcQ instead.  
@@ -36,6 +36,18 @@ To apply a function to all the processes in the list you can use forallProcQ, it
 Its a list of free pcbs and its kept using a series of recursive functions.  
 
 With freePcb the pcb passed as an argument is made the head of the list.  
+
+### Pcb Tree
+
+Each Pcb is a node of the tree of Pcbs. That is needed for keep the processes' hierarchy. 
+Each Pcb has a pointer for his parent, his sibling and his first child.
+
+The function used for insert a child in a node's hierarchy is insertChild. 
+The specified pcb to insert becomes the last sibling of the first child of the parent (that's done by the _addAsLastSibl facility by a recursive function).
+
+The function for removing the first child of a node is removeChild.
+
+The function for removing an arbitrary child of a node is outChild. It use a recursive facility for obtaining the previous sibling of the specified node.
 
 
 
