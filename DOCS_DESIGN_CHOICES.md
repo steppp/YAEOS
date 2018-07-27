@@ -165,14 +165,50 @@ mode and the total wallclock time count from the first start.
 
 ### SYS9: 
 
-Returns the pid of the process which invoke this syscall and its parent's one. If called by the root process
-the ppid will be NULL.
+Returns the pid of the process which invoke this syscall and its parent's one. If called by
+the root process the ppid will be NULL.
 
 ### SYS10:
 
 This syscall puts the process in a suspended state waiting for a child to terminate.
 The semaphore is set to 0, and then the process is P'ed.
 
-Notice that the variable *childSem* has been added to pcb_t for simplicity instead of creating
-a new global semaphore for each process.
+Notice that the variable *childSem* has been added to pcb_t for simplicity instead
+of creating a new global semaphore for each process.
+
+
+---
+
+
+## Initialization nucleus
+
+The first operations executed by the kernel are the initialization of data structures,
+variables, and NEW areas for interrupts and traps as well as the creation of the first PCB.
+
+First of all, NEW areas for interrupts and traps are initialized following the specification.
+For each interrupt and trap there's a constant which points to the address of the NEW area
+that will be loaded every time that interrupt or trap is risen. A function handler for each
+interrupt or trap is specified, and its address is stored in the program counter variable of the
+NEW area. The stack pointer value is set ro RAM_TOP, all interrupts are disabled and the
+execution mode is set to privileged.
+
+The pcbFree list and the ASL are initialized using the default methods. Before the initialization
+of the first PCB, the other variables are set with the default values. These variables are the
+amount of PCBs in the ready queue, blocked on different devices and the number of total active
+ones.  Pseudoclock ticks count, aging ticks count are set to zero and the pseudoclock semaphore
+is initialized to zero. All values in the interrput lines arrays are set to zero. The two variables which
+represent the high and low part of the TOD when the clock start are initialized using the values
+returned by getTODLO() and getTODHI().
+
+The last action to be performed before the schduler is called is the initialization of the first PCB.
+All variables except for the state variable will contain the default values. The state of the PCB is
+set according to the specification, so the stack pointer points to RAM_TOP - FRAMESIZE (the 
+second last memory frame), the program counter contains the address of the *test* function
+defined in p1test; all interrupts are enabled, the execution mode is privileged, and all the bits of
+the CP15 coprocessor are set to zero to disable the virtual memory. The createProcess syscall is
+invoked to finally create the first PCB.
+
+The last action performed by the nucleus is the call to the dispatch function of the scheduler.
+From this point onward the execution flow will never return to the nucleus and the operating system
+is, at this point, actually started.
 
