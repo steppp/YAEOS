@@ -1,0 +1,41 @@
+Luca Sciullo
+
+1) La chiamata LDST(state) non modifica i registri TOD di uarm con quelli salvati in state, giusto?
+Dalla tesi di Marco Melletti evinco che questi registri dovrebbero essere read-only (pagina 67).
+
+2) La tesi di Marco Melletti dice che se la SYS 5 viene chiamata piu' di una volta il processo
+chiamante deve essere terminato (pagina 126). Le specifiche di YAEOS del professore invece dicono
+che la system call ritorna -1 se chiamata piu' di una volta, suppongo sottointendendo che il
+processo chiamante non venga terminato (slide 16). Queste due cose non sono in contraddizione?
+
+Chello@2: mi sembra di ricordare che avesse detto che comunque bisogna terminare. É da chiedere
+indubbiamente.
+
+3) La tesi di Marco Melletti dice che quando un processo genera un trap se le aree new e old per quel
+tipo di trap sono state inizializzate (mediante SYS5) allora il SO deve salvare lo stato del
+processo nell'area old specificata con SYS5 e caricare (suppongo con LDST) l'area new specificata
+sempre con SYS5 (pagina 129). Le specifiche di YAEOS del professore dicono che quando un processo
+genera un Trap se si ha riattivazione in seguito alla gestione di quest'ultima l'istruzione che ha
+causato il trap deve essere ripetuta (Slide 24). Di questa cosa se ne occupa il SO (quindi noi) o e'
+l'ultima istruzione del gestore di trap salvato nell'area new (qualcosa del tipo LDST(&trap_old))?
+
+4) Quando un processo chiama la funzione SYSCALL i parametri passati sono salvati nei primi quattro
+registri dello stato del processo chiamante (quindi, quando siamo dentro al kernel, nei primi
+quattro registri dello stato salvato nell'area SYSBKOLD) o direttamente nei primi quattro registri
+dello stato salvato nell'area SYSBKNEW?
+
+5) Vanno gestiti i casi di interrupt asincroni non causati dai processi mediante la SYS8 delle
+specifiche di YAEOS del professore? Mi e' venuto questo dubbio perche' la SYS8 di JaeOS della tesi
+di Marco Melletti e' diversa. Nella descrizione della gestione degli interrupt (pagina 131) parla
+anche del caso in cui un interrupt sia arrivato ma la chiamata SYS8 non e' ancora stata fatta dal
+runningProcess. Questo suppongo possa accadere quando, ad esempio, arriva un pacchetto dalla rete.
+In questi casi parla di salvare lo stato del device register da una parte e di restituirlo poi al
+prossimo processo che fara' una SYS8. In YAEOS invece e' possibile questo scenario, e vanno quindi
+gestiti dei buffer per i dispositivi, oppure ogni interrupt di un device e' conseguente ad una
+chiamata SYS8 (di YAEOS) quindi non va gestito alcun buffer e il processo che riceve la status word
+e' sempre il primo processo bloccato sul device che ha generato l'interrupt?
+
+6) Nel p2test in allegato, scritto in classe dal professore, alla riga 52, visto che si vuole scrivere
+il comando per trasmettere un carattere, da scrivere quindi nella word TRANSMCOMMAND del device
+register del terminale, l'indirizzo da passare non dovrebbe essere DEV_REG_ADDR(IL_TERMINAL,0) +
+3*WS, invece che 2*WS?

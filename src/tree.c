@@ -28,7 +28,7 @@ pcb_t *removeChild(pcb_t *p) {
 	if (p->p_first_child == NULL) return NULL;
 	//Else remove it from first child. Leave the tree node consistent.
 	p->p_first_child = child->p_sib;
-	p->p_sib = NULL;
+	child->p_sib = NULL;
 	child->p_parent = NULL;
 
 	return child;
@@ -40,7 +40,7 @@ pcb_t *outChild(pcb_t *p) {
 	if (p->p_parent == NULL) 
 		return NULL;
 	//If p is the first child of his parent
-	if (p->p_parent->p_first_child = p) {
+	if (p->p_parent->p_first_child == p) {
 		p->p_parent->p_first_child = p->p_sib;
 	}
 	else {

@@ -1,0 +1,21 @@
+deadlockCheck
+inizializzazione del kernel
+ - inizializzazione variabili e semafori
+ - inizializzazione aree new
+creazione del primo processo
+System call
+ - sys5
+ - sys6
+ - sys7
+ - sys8
+ - sys9
+ - sys10
+Gestori di trap di tipo breakpoint, tlb o pgmtrap
+Gestione delle linee di interrupt
+ - acknoledgement degli interrupt
+ - gestione dei semafori associati ai disositivi
+ - gestione dei semafori associati ai disositivi
+
+Domande da fare
+ - valore di MAXPRIO
+ - dove salvare le word dei device nel caso di interrupt asincroni che avvengono prima di una SYS8
