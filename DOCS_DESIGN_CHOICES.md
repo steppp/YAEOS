@@ -272,10 +272,35 @@ in response to the trap need to be specified.
 
 This syscall returns 0 in case of success, -1 otherwise.
 
+### Time management
+
+YAEOS can keep track of wallclock, user and kernel times for each process.
+The wallclock time is the time passed between now and process creation time.
+The usertime is the time spent in user mode by process.
+The kerneltime is the time spent in kernel mode 
+(while managing interrupts, syscalls and traps) by process.
+
+Calculating the wallclock time is done by simply considering the difference 
+between now and the process start time .
+
+The user time is calculated subtracting the last time process has started in
+user mode and the time process has stopped.
+
+The kernel time is calculated subtracting the last time the process has stopped
+and the current time. That's the time passed by process in the last (current)
+switch context to kernel mode. Then time yet calculated is accounted to the 
+current process' total kernel time.
+
+The times when the last context switch happened can be found in the oldarea of 
+the respective trap raised oldarea (e.g. if a tlb trap is raised the tlb oldarea
+is used for obtaining process' stop TOD).
+
 ### SYS6: Get times
 
 This syscall returns the current process' times spent in user mode, in kernel
 mode and the total wallclock time count from the first start.
+
+If a pointer is set to 0 then the respective value will not be returned.
 
 ### SYS7: Wait for clock
 

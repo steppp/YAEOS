@@ -41,6 +41,7 @@ void V(int *semaddr, state_t *to_save);
 int specifyTrapHandler(int type, state_t *old, state_t *new);
 
 /* SYSCALL 6, returns times of current running processes
+ * If a field is set to 0 means that are not required to caller so will not returned
  * user contains the time spent in user mode of the process
  * kernel contains the time spent in kernel mode of the process
  * wallclock contains the time from first process load.

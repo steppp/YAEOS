@@ -150,7 +150,7 @@ void userTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low) {
 void kernelTimeAccounting(unsigned int TOD_Hi, unsigned int TOD_Low, pcb_t* process) {
     cpu_t newKernelTime, nowTOD;
 
-    /* If no process has ho account time, do nothing*/
+    /* If no process has no account time, do nothing*/
     if (process == NULL) return;
 
     /* Now creating cpu_t time having High and Low part of the number */
