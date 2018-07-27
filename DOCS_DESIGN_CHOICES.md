@@ -295,6 +295,13 @@ The times when the last context switch happened can be found in the oldarea of
 the respective trap raised oldarea (e.g. if a tlb trap is raised the tlb oldarea
 is used for obtaining process' stop TOD).
 
+Since there are not hardware support for handling time when switching context 
+from kernel to user mode, the time count is approximate. 
+The same problem is presented when updating the system tick timer. 
+Because both procedures are to do when context switching, we choose to give 
+priority to tick updating. So system firstly account times and then updats
+tick times.
+
 ### SYS6: Get times
 
 This syscall returns the current process' times spent in user mode, in kernel
