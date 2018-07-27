@@ -10,9 +10,6 @@
 #include <types.h>
 #include <interrupts.h>
 
-#ifdef DEBUG
-extern int p1p1addr;
-#endif // DEBUG
 
 void P(int *semaddr)
 {

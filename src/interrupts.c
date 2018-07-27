@@ -15,9 +15,6 @@ int terminals[DEV_PER_INT][2];
 unsigned int pseudoClockTicks;    /* Number of times the pseudoclock caused an interrupt */
 unsigned int agingTicks;  /* Number of times the aging caused an interrupt */
 
-#ifdef DEBUG
-memaddr devreg;
-#endif // DEBUG
 
 void interruptHandler()
 {
