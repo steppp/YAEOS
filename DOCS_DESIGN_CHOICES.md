@@ -2,6 +2,32 @@
 
 ---
 
+## Data structures
+
+### Active Semaphore Hash Table
+
+The semaphores in YAEOS are implemented with the use of an integer variable and a semaphore
+descriptor. The semaphore descriptor contains a reference to the semaphore it represents and a
+pointer to a queue of PCBs blocked on that semaphore. The semaphore descriptors currently in use are
+mantained in a hash table.
+
+There is a fixed number of semaphore descriptors, each of which is statically allocated in the
+kernel and, if not being used at the moment, is kept in a list of available descriptors, that can be
+used when a semaphore descriptor is needed. This means that there's a limit to the number of total
+semaphores that can be used concurrently.
+
+A semaphore's value is contained in the integer variable associated with it, and a semaphore is
+identified by the address of that same variable. This address is used as an argument to the hash
+function to retrieve its semaphore descriptor in an efficient way.
+
+The chosen hash function is the multiplicative hash. Despite the computational cost due to the
+multiplication, this function has the pro of being independent of the size of the hash table. The
+constant used for the multiplication was suggested by Donald Knuth and should be good in most
+situations.
+
+The queue of PCBs blocked on a semaphore is a priority queue and the hashtable is a chained hash
+table with linked lists.
+
 ## PCB design 
 
 The PCB contains the following fields:
@@ -180,7 +206,8 @@ mode and the total wallclock time count from the first start.
 
 ### SYS7: Wait for clock
 
-Stops the current running process and adds it to the pseudoClockSem with a P call, it will be unlocked after the next clock tick
+Stops the current running process and adds it to the pseudoClockSem with a P call, it will be
+unlocked after the next clock tick.
 
 ### SYS8: I/O Operation 
 
