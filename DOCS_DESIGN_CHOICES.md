@@ -120,6 +120,10 @@ Checks if the process has a higher level handler stored in its corrisponding new
 ---
 ## Syscalls 
 
+Syscalls are managed by sysHandler() function. 
+Each syscall are handled differently. Specifications in code for more information about how a single syscall is managed.
+sysHandler() function also manages syscalls >= 10 and breakpoints raising.
+
 ### SYS1: Create process
 Tries to allocate a new pcb for a new process. If succesful it sets its fields appropriately and
 returns 0, else returns -1.
