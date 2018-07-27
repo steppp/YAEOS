@@ -16,9 +16,7 @@ was created with. This can be restored at the appropriate time.
 >- **p_semKey**: A pointer to the semaphore the process is blocked on (if any).
 >- **waitingOnIo**: 1 if process is waiting for I/O, 0 otherwise.
 >- **childSem**: Semaphore used to block the process when it's waiting for a 
-child to terminate. This semaphore will be managed by the child.
->- **waitingForChild**: 1 if the process is waiting for a child , 0 otherwise. Useful to unblock a
-parent that's waiting for a child to terminate.
+child to terminate. This semaphore will be V'ed by the child which terminates first.
 >- **usertime**: Process' time spent in user mode
 >- **kerneltime**: Process' time spent in kernel mode
 >- **lasttime**: Last TOD marker. We use it for keep track of last time the process was started.
@@ -163,4 +161,18 @@ This syscall returns 0 in case of success, -1 otherwise.
 This syscall returns the current process' times spent in user mode, in kernel
 mode and the total wallclock time count from the first start.
 
-### SYS 7: Wait for clock
+### SYS7: Wait for clock
+
+### SYS9: 
+
+Returns the pid of the process which invoke this syscall and its parent's one. If called by the root process
+the ppid will be NULL.
+
+### SYS10:
+
+This syscall puts the process in a suspended state waiting for a child to terminate.
+The semaphore is set to 0, and then the process is P'ed.
+
+Notice that the variable *childSem* has been added to pcb_t for simplicity instead of creating
+a new global semaphore for each process.
+

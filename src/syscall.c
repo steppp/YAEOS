@@ -67,7 +67,6 @@ int createProcess(state_t *statep, int priority, void **cpid){
         if (cpid != NULL) /* If the creating process doesn't need the pid */
             *cpid=newproc;
         newproc->waitingOnIO = 0;
-        newproc->waitingForChild = 0;
         newproc->usertime = newproc->kerneltime = 0;
 
         activePcbs++;
@@ -103,9 +102,8 @@ void killProcessSubtree(pcb_t *pcb){
 	while ((child=removeChild(pcb)) != NULL) killProcessSubtree(child);
 
     /* resume the parent process if it has been suspended using the SYS10 */
-    if (pcb->p_parent->waitingForChild) {       /* if the parent is waiting for a child to terminate */
+    if (pcb->p_parent->childSem < 0) {       /* if the parent is waiting for a child to terminate */
         V(pcb->p_parent->p_semKey,(state_t*)SYSBK_OLDAREA);             /* unblock the parent process  */
-        pcb->p_parent->waitingForChild = 0;     /* the parent is no longer waiting for a child to terminate */
     }
 
     if (outProcQ(&readyQueue,pcb) != NULL) /* removing it from ready queue*/
@@ -300,7 +298,6 @@ void waitChild() {
     if (runningPcb->p_first_child != NULL) /* No need to wait if there are no children */
     {
         runningPcb->childSem = 0;
-        runningPcb->waitingForChild = 1;    /* This will be used later to tell wether this process were waiting for a child to end  */
         P(&runningPcb->childSem);                          /* Suspend the process */
     }
 }

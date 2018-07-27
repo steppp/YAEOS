@@ -20,7 +20,6 @@ typedef struct pcb_t {
 	int *p_semKey;                  /* Semaphore the process is blocked on */
     int waitingOnIO;                /* Used to count the number of softblocked processes */
     int childSem;                   /* Used to wait on a child */
-    int waitingForChild;            /* True if the process is waiting for a child to end */
 	/* Process times */
     cpu_t usertime; 				/* Process' time spent in user mode */
     cpu_t kerneltime;				/* Process' time spent in kernel mode */
