@@ -1,4 +1,68 @@
-# **DOCUMENTATION AND DESIGN CHOICES FOR YAEOS**
+---
+title: Documentation and design choices for Yaeos
+author:
+- name: Andrea Berlingieri
+  email: andrea.berlingieri@studio.unibo.it
+  matricola: 0000788959
+- name: Stefano Andriolo
+  email: stefano.andriolo3@studio.unibo.it
+  matricola: 0000801172
+- name: Federico Rachelli
+  email: federico.rachelli@studio.unibo.it
+  matricola: 0000789342
+- name: Igor Ershov
+  email: igor.ershov@studio.unibo.it
+  matricola: 0000789525
+...
+
+
+## Data structures
+
+### Pcb List
+
+The pcb list is kept using a series of recursive functions.  
+
+The function used to inster a new process in the queue is called insertprocQ. Firstly it checks if there are elements in the queue, replacing the head if there are none, then it checks if the new process has a higher priority than the head, and places it before if its has , or it proceeds recursevly on the list if not.  
+Y
+
+With headProcQ you can get the first element of the list, without removing it, to also remove it you can use removeProcQ instead.  
+
+You can remove a specific process using outProcQ. This function will check the head of the list against the desired process, if its a match it will remove and return it , else it will proceed recursevly on the next element on the list.  
+
+To apply a function to all the processes in the list you can use forallProcQ, it will run the function against the first element of the list and proceed recursevly on the next one.
+
+### Free Pcb List
+
+Its a list of free pcbs and its kept using a series of recursive functions.  
+
+With freePcb the pcb passed as an argument is made the head of the list.  
+
+
+
+### Active Semaphore Hash Table
+
+The semaphores in YAEOS are implemented with the use of an integer variable and a semaphore
+descriptor. The semaphore descriptor contains a reference to the semaphore it represents and a
+pointer to a queue of PCBs blocked on that semaphore. The semaphore descriptors currently in use are
+mantained in a hash table.
+
+There is a fixed number of semaphore descriptors, each of which is statically allocated in the
+kernel and, if not being used at the moment, is kept in a list of available descriptors, that can be
+used when a semaphore descriptor is needed. This means that there's a limit to the number of total
+semaphores that can be used concurrently.
+
+A semaphore's value is contained in the integer variable associated with it, and a semaphore is
+identified by the address of that same variable. This address is used as an argument to the hash
+function to retrieve its semaphore descriptor in an efficient way.
+
+The chosen hash function is the multiplicative hash. Despite the computational cost due to the
+multiplication, this function has the pro of being independent of the size of the hash table. The
+constant used for the multiplication was suggested by Donald Knuth and should be good in most
+situations.
+
+The queue of PCBs blocked on a semaphore is a priority queue and the hashtable is a chained hash
+table with linked lists.
+
 
 ---
 
@@ -184,7 +248,8 @@ mode and the total wallclock time count from the first start.
 
 ### SYS7: Wait for clock
 
-Stops the current running process and adds it to the pseudoClockSem with a P call, it will be unlocked after the next clock tick
+Stops the current running process and adds it to the pseudoClockSem with a P call, it will be
+unlocked after the next clock tick.
 
 ### SYS8: I/O Operation 
 
