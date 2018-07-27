@@ -1,8 +1,43 @@
-# **DOCUMENTATION AND DESIGN CHOICES FOR YAEOS**
-
 ---
+title: Documentation and design choices for Yaeos
+author:
+- name: Andrea Berlingieri
+  email: andrea.berlingieri@studio.unibo.it
+  matricola: 0000788959
+- name: Stefano Andriolo
+  email: stefano.andriolo3@studio.unibo.it
+  matricola: 0000801172
+- name: Federico Rachelli
+  email: federico.rachelli@studio.unibo.it
+  matricola: 0000789342
+- name: Igor Ershov
+  email: igor.ershov@studio.unibo.it
+  matricola: 0000789525
+...
+
 
 ## Data structures
+
+### Pcb List
+
+The pcb list is kept using a series of recursive functions.  
+
+The function used to inster a new process in the queue is called insertprocQ. Firstly it checks if there are elements in the queue, replacing the head if there are none, then it checks if the new process has a higher priority than the head, and places it before if its has , or it proceeds recursevly on the list if not.  
+Y
+
+With headProcQ you can get the first element of the list, without removing it, to also remove it you can use removeProcQ instead.  
+
+You can remove a specific process using outProcQ. This function will check the head of the list against the desired process, if its a match it will remove and return it , else it will proceed recursevly on the next element on the list.  
+
+To apply a function to all the processes in the list you can use forallProcQ, it will run the function against the first element of the list and proceed recursevly on the next one.
+
+### Free Pcb List
+
+Its a list of free pcbs and its kept using a series of recursive functions.  
+
+With freePcb the pcb passed as an argument is made the head of the list.  
+
+
 
 ### Active Semaphore Hash Table
 
@@ -27,6 +62,9 @@ situations.
 
 The queue of PCBs blocked on a semaphore is a priority queue and the hashtable is a chained hash
 table with linked lists.
+
+
+---
 
 ## PCB design 
 
