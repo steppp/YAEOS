@@ -6,23 +6,23 @@
 
 The PCB contains the following fields:
 
->- **p_next**: Pointer for the next element of the list. 
->- **p_parent, p_first_child, p_sib**: Pointers for tree hierarchy of processes.
->- **p_s**: CPU state. Useful to save the state of a process to resume it at a later time.
->- **p_priority**: Process' priority. The scheduler can increase the priority according to aging policy, up
+>- **```p_next```**: Pointer for the next element of the list. 
+>- **```p_parent, p_first_child, p_sib```**: Pointers for tree hierarchy of processes.
+>- **```p_s```**: CPU state. Useful to save the state of a process to resume it at a later time.
+>- **```p_priority```**: Process' priority. The scheduler can increase the priority according to aging policy, up
 to the maximum limit of MAXPRIO.
->- **old_priority**: We keep track of the original priority of the process, i.e. the one the process
+>- **```old_priority```**: We keep track of the original priority of the process, i.e. the one the process
 was created with. This can be restored at the appropriate time.
->- **p_semKey**: A pointer to the semaphore the process is blocked on (if any).
->- **waitingOnIo**: 1 if process is waiting for I/O, 0 otherwise.
->- **childSem**: Semaphore used to block the process when it's waiting for a 
+>- **```p_semKey```**: A pointer to the semaphore the process is blocked on (if any).
+>- **```waitingOnIo```**: 1 if process is waiting for I/O, 0 otherwise.
+>- **```childSem```**: Semaphore used to block the process when it's waiting for a 
 child to terminate. This semaphore will be V'ed by the child which terminates first.
->- **usertime**: Process' time spent in user mode
->- **kerneltime**: Process' time spent in kernel mode
->- **lasttime**: Last TOD marker. We use it for keep track of last time the process was started.
+>- **```usertime```**: Process' time spent in user mode
+>- **```kerneltime```**: Process' time spent in kernel mode
+>- **```lasttime```**: Last TOD marker. We use it for keep track of last time the process was started.
 Useful to keep track of the process' user time
->- **wallclocktime**: Process' creation TOD. Useful for calculating the wallclocktime
->- **sysbk_new, sysbk_old, tlb_new, tlb_old, pgmtrap_new, pgmtrap_old**: 
+>- **```wallclocktime```**: Process' creation TOD. Useful for calculating the wallclocktime
+>- **```sysbk_new, sysbk_old, tlb_new, tlb_old, pgmtrap_new, pgmtrap_old```**: 
 Per-trap handlers
 
 ---
@@ -100,7 +100,24 @@ duration of a timeslice. If the aging tick is also too far in the future to worr
 timer is set to the timeslice duration and the cause is set accordingly.
 
 ---
+## Handlers
 
+### Pgm Trap Handler
+Tries to passup the trap to a higher level handler using the passup function , if its unsuccesful it terminates the process and dispatches a new one.
+
+### Tlb Handler
+Tries to passup the tlb to a higher level handler using the passup function , if its unsuccesful it terminates the process and dispatches a new one.
+
+### Syscall and Breakpoint Handler
+The YAEOS Syscall and breakpoint handler only supports the first 10 syscalls for processes in kernel mode, if the cause of the exception is a breakpoint or the process is in user mode it tries to pass it to a higher level handler, or a pgm trap handler with the cause "Reserved Instruction" if the process in user mode tries to use a reserved syscall, using the passup function and if unsuccesful it terminates the process and dispatches a new one.
+If the process is in kernel mode and the exception is a syscall the handler checks which syscall is being called, sets the appropriate parameters to the respective function and calls it, storing any return values in the "a" registers of the process.
+If the handler completes its job succesfully without passing up, it restores the caller if there is a running process, or it dispatches a new one if there isn't.
+
+
+### Passup helper function 
+Checks if the process has a higher level handler stored in its corrisponding new area (sysbk, tlb or pgmtrap), if there is one the current state will be saved in the old area and the new area will be loaded, if there isn't the function will return a failure.
+
+---
 ## Syscalls 
 
 ### SYS1: Create process
@@ -163,12 +180,19 @@ mode and the total wallclock time count from the first start.
 
 ### SYS7: Wait for clock
 
-### SYS9: 
+Stops the current running process and adds it to the pseudoClockSem with a P call, it will be unlocked after the next clock tick
+
+### SYS8: I/O Operation 
+
+Activates the I/O operations copying the command in the appropriate command device register. The caller will be suspended and appended to the appropiate semaphore (using a normalDevice semaphore if the interupt Line is not 7 or a terminal semaphone if =7)  
+The device register and interrupt line are calculated using a helper function which uses pointer offsets, basing its calculations on derivatitons of the formula "```devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)```".
+
+### SYS9: Get Pid
 
 Returns the pid of the process which invoke this syscall and its parent's one. If called by
 the root process the ppid will be NULL.
 
-### SYS10:
+### SYS10: Wait for child
 
 This syscall puts the process in a suspended state waiting for a child to terminate.
 The semaphore is set to 0, and then the process is P'ed.
