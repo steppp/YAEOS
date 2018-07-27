@@ -13,7 +13,7 @@ The pcb list is maintained using a series of recursive functions.
 
 The function used to insert a new process in the queue is called insertProcQ. Firstly it checks if there 
 are elements in the queue. If there are none the head of the queue is set to be the given pcb. If
-that's not the case it checks if the new process has a higher priority than the head, and places it
+that's not the case it checks whether the new process has a higher priority than the head, and places it
 before it if it does, else it proceeds recursively on the rest of the list (ignoring the head).
 
 With headProcQ you can get the first element of the list, without removing it. To also remove it you can use
@@ -45,18 +45,18 @@ Each Pcb has a pointer for his parent, his sibling and his first child.
 
 The function used to insert a child in a node's hierarchy is insertChild. 
 The pcb to insert becomes the last children of the parent (the first if the parent has no child at
-the moment of the call of insertChild). That's done by the _addAsLastSibl facility by a recursive function).
+the moment of the call of insertChild). That's done by the addAsLastSibl facility, a recursive function.
 
 The function for removing the first child of a node is removeChild.
 
-The function for removing an arbitrary child of a node is outChild. It uses a recursive facility for obtaining the previous sibling of the specified node.
+The function for removing an arbitrary child of a node is outChild. It uses a recursive facility to obtain the previous sibling of the specified node.
 
 ### Active Semaphore Hash Table
 
 The semaphores in YAEOS are implemented with the use of an integer variable and a semaphore
 descriptor. The semaphore descriptor contains a reference to the semaphore it represents and a
-pointer to a queue of PCBs blocked on that semaphore. The semaphore descriptors currently in use are
-mantained in a hash table.
+pointer to a queue of PCBs of processes blocked on that semaphore. The semaphore descriptors
+currently in use are maintained in a hash table.
 
 There is a fixed number of semaphore descriptors, each of which is statically allocated in the
 kernel and, if not being used at the moment, is kept in a list of available descriptors, that can be
@@ -76,10 +76,10 @@ The queue of PCBs blocked on a semaphore is a priority queue and the hashtable i
 table with linked lists.
 
 It's possible, using a series of functions of the semaphore module, to block a process on a
-semaphore, to unblock it, to retrieve or to retrive and remove the head of a queue of blocked
+semaphore, to unblock it, to retrieve or to retrieve and remove the head of a queue of blocked
 processes, to remove a process from any queue it's blocked on and to apply a function to all the
 processes blocked on a semaphore. Finally a function to initialize the hashtable with empty linked
-lists is available. All of these functions are recursive.
+lists is available. All of these functions are implemented recursively.
 
 ---
 
@@ -174,7 +174,7 @@ increment of the tick counter.
 The update of the timer is done as follows: first the deadline of the next pseudoclock tick is
 calculated. If this is less than the timeslice duration then the cause of the next interval timer's
 interrupt will be the pseudoclock tick. If the deadline has been passed the timer is not set: this
-way its interrupt is not ackowledged and so it is handled again the moment the interrupts are
+way its interrupt is not acknowledged and so it is handled again the moment the interrupts are
 unmasked. Otherwise, the timer is set to trigger an interrupt on the next pseudoclock tick. The same
 thing is done for the aging tick if the pseudoclock deadline is further away in the future than the
 duration of a timeslice. If the aging tick is also too far in the future to worry about it then the
@@ -185,28 +185,28 @@ timer is set to the timeslice duration and the cause is set accordingly.
 ## Handlers
 
 ### Pgm Trap Handler
-Tries to passup the trap to a higher level handler using the passup function , if its unsuccesful it
+Tries to passup the trap to a higher level handler using the passup function , if its unsuccessful it
  terminates the process and dispatches a new one.
 
 ### Tlb Handler
-Tries to passup the tlb to a higher level handler using the passup function , if its unsuccesful it
+Tries to passup the tlb to a higher level handler using the passup function , if its unsuccessful it
  terminates the process and dispatches a new one.
 
 ### Syscall and Breakpoint Handler
 The YAEOS Syscall and breakpoint handler only supports the first 10 syscalls for processes in kernel
  mode, if the cause of the exception is a breakpoint or the process is in user mode it tries to pass 
 it to a higher level handler, or a pgm trap handler with the cause "Reserved Instruction" if the process 
-in user mode tries to use a reserved syscall, using the passup function and if unsuccesful it terminates 
+in user mode tries to use a reserved syscall, using the passup function and if unsuccessful it terminates 
 the process and dispatches a new one.
 If the process is in kernel mode and the exception is a syscall the handler checks which syscall is being 
 called, sets the appropriate parameters to the respective function and calls it, storing any return values
  in the "a" registers of the process.
-If the handler completes its job succesfully without passing up, it restores the caller if there is a running
+If the handler completes its job successfully without passing up, it restores the caller if there is a running
  process, or it dispatches a new one if there isn't.
 
 
 ### Passup helper function 
-Checks if the process has a higher level handler stored in its corrisponding new area (sysbk, tlb or pgmtrap)
+Checks if the process has a higher level handler stored in its corresponding new area (sysbk, tlb or pgmtrap)
 , if there is one the current state will be saved in the old area and the new area will be loaded, if there isn't 
 the function will return a failure.
 
@@ -229,7 +229,7 @@ In the end it inserts the new process in ready queue.
 
 ### SYS2: Terminate process
 
-Terminates the given process and all its childs.
+Terminates the given process and all its children.
 
 If the given process to terminate is NULL then the syscall terminates currently running process. 
 
@@ -275,32 +275,26 @@ This syscall returns 0 in case of success, -1 otherwise.
 ### Time management
 
 YAEOS can keep track of wallclock, user and kernel times for each process.
-The wallclock time is the time passed between now and process creation time.
+The wallclock time is the time passed from the process' creation time.
 The usertime is the time spent in user mode by process.
 The kerneltime is the time spent in kernel mode 
 (while managing interrupts, syscalls and traps) by process.
+Note: the time spent by a higher level handler, if defined, is collected as usertime of the process
+that specified that handler.
 
 Calculating the wallclock time is done by simply considering the difference 
 between now and the process start time .
 
 The user time is calculated subtracting the last time process has started in
-user mode and the time process has stopped.
+user mode and the time process has stopped and the control passed to the kernel code.
 
 The kernel time is calculated subtracting the last time the process has stopped
-and the current time. That's the time passed by process in the last (current)
-switch context to kernel mode. Then time yet calculated is accounted to the 
-current process' total kernel time.
+from the time that a kernel routine has done its job and control is about to pass to a process.
+That's the time spent by the kernel to service the process with interrupt, syscall or exception
+handling.
 
-The times when the last context switch happened can be found in the oldarea of 
-the respective trap raised oldarea (e.g. if a tlb trap is raised the tlb oldarea
-is used for obtaining process' stop TOD).
-
-Since there are not hardware support for handling time when switching context 
-from kernel to user mode, the time count is approximate. 
-The same problem is presented when updating the system tick timer. 
-Because both procedures are to do when context switching, we choose to give 
-priority to tick updating. So system firstly account times and then updats
-tick times.
+The times when the last context switch happened can be found in the appropriate oldarea (e.g. if a
+tlb trap is raised the tlb oldarea is used for obtaining process' stop TOD).
 
 ### SYS6: Get times
 
@@ -317,10 +311,10 @@ unlocked after the next clock tick.
 ### SYS8: I/O Operation 
 
 Activates the I/O operations copying the command in the appropriate command device register. The caller will 
-be suspended and appended to the appropiate semaphore (using a normalDevice semaphore if the interupt Line is 
-not 7 or a terminal semaphone if =7)  
+be suspended and appended to the appropriate semaphore (using a normalDevice semaphore if the interrupt Line is 
+not 7 or a terminal semaphore if =7)  
 The device register and interrupt line are calculated using a helper function which uses pointer offsets, basing 
-its calculations on derivatitons of the formula "```devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)```".
+its calculations on the formula "```devAddrBase = 0x40 + ((Intline-3)*0x80)+(DevNo*0x10)```".
 
 ### SYS9: Get Pid
 
