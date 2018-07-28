@@ -79,7 +79,7 @@ It's possible, using a series of functions of the semaphore module, to block a p
 semaphore, to unblock it, to retrieve or to retrieve and remove the head of a queue of blocked
 processes, to remove a process from any queue it's blocked on and to apply a function to all the
 processes blocked on a semaphore. Finally a function to initialize the hashtable with empty linked
-lists is available. All of these functions are implemented recursively.
+lists is available. All of these functions are recursive.
 
 ---
 
@@ -124,7 +124,7 @@ insertInReady function, the three functions for processes' time accounting (user
 kernelTimeAccounting and freezeLastTime) and the passup function. 
 
 Parts of the OS call the methods of the scheduler they need to and handle the counters directly.
-Some aspects of the of the loading of a new process, like the saving of the state of a process in
+Some aspects of the loading of a new process, like the saving of the state of a process in
 its pcb and some adjustments to the pc of a process, are done only in the scheduler module, so they
 are abstracted by the scheduler methods. Still, there is not a single function that checks the state
 of the system and takes the right scheduling decision.
@@ -211,6 +211,7 @@ Checks if the process has a higher level handler stored in its corresponding new
 the function will return a failure.
 
 ---
+
 ## Syscalls 
 
 Syscalls are managed by sysHandler() function. 
@@ -346,6 +347,12 @@ NEW area. The stack pointer value is set ro RAM_TOP, all interrupts are disabled
 execution mode is set to privileged.
 
 The pcbFree list and the ASL are initialized using the default methods. Before the initialization of
+the first PCB, the other variables are set with the default values. These variables are the number
+of PCBs in the ready queue, blocked on devices semaphores for I/O and the number of active onesi
+(that is not softblocked).  Pseudoclock ticks count, aging ticks count are set to zero and the
+pseudoclock semaphore is initialized to zero. All the devices semaphores are set to zero. The two
+variables which represent the high and low part of the TOD when the initialization is done are set
+using the values returned by getTODLO() and getTODHI(). These values are useful to set the
 the first PCB, the other variables are set with the default values. These variables are the number
 of PCBs in the ready queue, blocked on devices semaphores for I/O and the number of active onesi
 (that is not softblocked).  Pseudoclock ticks count, aging ticks count are set to zero and the
